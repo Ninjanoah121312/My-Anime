@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9Anime</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <button class="menu-btn" id="menuToggle">&#9776;</button>
+    <div class="logo">
+      <span class="logo-num">9</span><span class="logo-text">Anime</span>
+    </div>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Enter anime name" autocomplete="off">
+      <button id="searchBtn">&#128269;</button>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="randomBtn" title="Random Anime">&#127922;</button>
+      <button class="auth-btn" id="authBtn">Sign in</button>
+    </div>
+  </div>
+  <nav class="sidenav" id="sidenav">
+    <a href="#" class="nav-link active" data-page="home">HOME</a>
+    <a href="#" class="nav-link" data-page="genres">GENRES</a>
+    <a href="#" class="nav-link" data-page="ongoing">ONGOING</a>
+    <a href="#" class="nav-link" data-page="recent">UPDATED</a>
+  </nav>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="modal" id="authModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeAuth">&times;</button>
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabSignin">Sign In</button>
+      <button class="tab-btn" id="tabSignup">Sign Up</button>
+    </div>
+    <div id="signinForm">
+      <input type="text" id="siUsername" placeholder="Username">
+      <input type="password" id="siPassword" placeholder="Password">
+      <div class="modal-error" id="siError"></div>
+      <button class="submit-btn" id="doSignin">Sign In</button>
+    </div>
+    <div id="signupForm" style="display:none">
+      <input type="text" id="suUsername" placeholder="Username">
+      <input type="email" id="suEmail" placeholder="Email">
+      <input type="password" id="suPassword" placeholder="Password">
+      <div class="modal-error" id="suError"></div>
+      <button class="submit-btn" id="doSignup">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="reviewModal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeReview">&times;</button>
+    <h3>Rate this Anime</h3>
+    <div class="star-picker" id="starPicker">
+      <span class="star-opt" data-v="1">&#9733;</span>
+      <span class="star-opt" data-v="2">&#9733;</span>
+      <span class="star-opt" data-v="3">&#9733;</span>
+      <span class="star-opt" data-v="4">&#9733;</span>
+      <span class="star-opt" data-v="5">&#9733;</span>
+      <span class="star-opt" data-v="6">&#9733;</span>
+      <span class="star-opt" data-v="7">&#9733;</span>
+      <span class="star-opt" data-v="8">&#9733;</span>
+      <span class="star-opt" data-v="9">&#9733;</span>
+      <span class="star-opt" data-v="10">&#9733;</span>
+    </div>
+    <p class="star-label" id="starLabel">Select a rating</p>
+    <button class="submit-btn" id="submitReview">Submit Rating</button>
+  </div>
+</div>
+
+<div class="modal" id="playerModal">
+  <div class="modal-box player-box">
+    <button class="modal-close" id="closePlayer">&times;</button>
+    <div class="player-header">
+      <h2 id="playerTitle"></h2>
+      <span id="playerEpLabel"></span>
+    </div>
+    <video id="videoPlayer" controls></video>
+    <div class="ep-list" id="epList"></div>
+    <div class="player-meta">
+      <div class="player-desc" id="playerDesc"></div>
+      <div class="player-rating" id="playerRating"></div>
+      <div class="player-genres" id="playerGenres"></div>
+      <button class="rate-btn" id="openReviewBtn">&#9733; Rate This Anime</button>
+    </div>
+  </div>
+</div>
+
+<main id="mainContent">
+  <section class="hero-section" id="heroSection">
+    <div class="hero-slide" id="heroSlide">
+      <div class="hero-info" id="heroInfo"></div>
+    </div>
+    <div class="hero-dots" id="heroDots"></div>
+  </section>
+
+  <section class="content-section">
+    <div class="section-left">
+      <div class="section-header">
+        <h2>Recently Updated</h2>
+      </div>
+      <div class="anime-grid" id="recentGrid"></div>
+
+      <div class="section-header" id="genreHeader" style="display:none">
+        <h2 id="genreTitle">Genre</h2>
+      </div>
+      <div class="anime-grid" id="genreGrid"></div>
+
+      <div class="section-header" id="searchHeader" style="display:none">
+        <h2 id="searchTitle">Search Results</h2>
+      </div>
+      <div class="anime-grid" id="searchGrid"></div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="top-anime-box">
+        <div class="top-tabs">
+          <span class="top-tab active" data-sort="views">Today</span>
+          <span class="top-tab" data-sort="rating">Rating</span>
+        </div>
+        <div class="top-list" id="topList"></div>
+      </div>
+
+      <div class="genre-box">
+        <h3>Genres</h3>
+        <div class="genre-tags" id="genreTags"></div>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script>
+const REPO_OWNER = "Ninjanoah121312";
+const REPO_NAME = "My-Anime";
+const BRANCH = "main";
+
+function _dk() {
+  const p = [103,105,116,104,117,98,95,112,97,116,95,49,49,66,78,50,65,85,68,81,48,84,117,120,115,65,74,53,107,115,79,76,113,95,80,119,120,117,120,77,71,107,78,104,85,117,52,119,81,100,81,109,115,120,81,98,107,98,113,100,107,81,87,112,85,113,85,101,116,50,69,50,78,99,86,100,101,109,75,85,69,66,66,71,90,90,111,111,98,114,74,116,49,107];
+  return p.map(c => String.fromCharCode(c)).join('');
+}
+
+const GH_TOKEN = _dk();
+const API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
+const RAW = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}`;
+
+const headers = () => ({
+  "Authorization": `token ${GH_TOKEN}`,
+  "Accept": "application/vnd.github.v3+json"
+});
+
+let allAnimes = [];
+let viewsData = {};
+let userData = {};
+let currentUser = null;
+let currentAnime = null;
+let selectedRating = 0;
+let heroAnimes = [];
+let heroIndex = 0;
+let heroTimer = null;
+
+async function ghGet(path) {
+  const r = await fetch(`${API}/contents/${path}`, { headers: headers() });
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+async function ghGetRaw(path) {
+  const r = await fetch(`${RAW}/${path}`);
+  if (!r.ok) return null;
+  return await r.text();
+}
+
+async function ghUpdate(path, content, sha) {
+  const body = {
+    message: `Update ${path}`,
+    content: btoa(unescape(encodeURIComponent(content))),
+    branch: BRANCH
+  };
+  if (sha) body.sha = sha;
+  const r = await fetch(`${API}/contents/${path}`, {
+    method: "PUT",
+    headers: { ...headers(), "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  return await r.json();
+}
+
+async function loadJSON(path) {
+  const res = await ghGet(path);
+  if (!res) return { data: {}, sha: null };
+  try {
+    const raw = decodeURIComponent(escape(atob(res.content.replace(/\n/g, ''))));
+    return { data: JSON.parse(raw), sha: res.sha };
+  } catch {
+    return { data: {}, sha: res.sha };
+  }
+}
+
+async function saveJSON(path, data, sha) {
+  return await ghUpdate(path, JSON.stringify(data, null, 2), sha);
+}
+
+async function loadAnimes() {
+  const res = await ghGet("Animes");
+  if (!res || !Array.isArray(res)) return [];
+  const folders = res.filter(f => f.type === "dir");
+  const list = [];
+  for (const f of folders) {
+    const contents = await ghGet(`Animes/${f.name}`);
+    if (!contents) continue;
+    const ep_exts = ["mp4","webm","mkv","avi","mov","m4v"];
+    const episodes = contents
+      .filter(c => c.type === "file" && ep_exts.some(e => c.name.toLowerCase().endsWith(`.${e}`) || /^\d+$/.test(c.name.split('.')[0])))
+      .filter(c => /^\d+/.test(c.name))
+      .sort((a,b) => parseInt(a.name) - parseInt(b.name));
+    let desc = "";
+    const descFile = contents.find(c => c.name === "Anime_Description.txt");
+    if (descFile) desc = await ghGetRaw(`Animes/${f.name}/Anime_Description.txt`) || "";
+    let genres = [];
+    const genreFile = contents.find(c => c.name === "Anime_Genre.txt");
+    if (genreFile) {
+      const gt = await ghGetRaw(`Animes/${f.name}/Anime_Genre.txt`) || "";
+      genres = gt.split(/[\n,]/).map(g => g.trim()).filter(Boolean);
+    }
+    const thumb = contents.find(c => ["thumbnail.jpg","thumbnail.png","thumbnail.jpeg","cover.jpg","cover.png"].includes(c.name.toLowerCase()));
+    list.push({
+      name: f.name,
+      episodes,
+      desc: desc.trim(),
+      genres,
+      thumb: thumb ? `${RAW}/Animes/${f.name}/${thumb.name}` : null
+    });
+  }
+  return list;
+}
+
+async function init() {
+  const [ud, vd] = await Promise.all([
+    loadJSON("Data/User_Data.json"),
+    loadJSON("Data/Views.json")
+  ]);
+  window._udSha = ud.sha;
+  window._vdSha = vd.sha;
+  userData = ud.data;
+  viewsData = vd.data;
+
+  const saved = localStorage.getItem("animeUser");
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    updateAuthUI();
+  }
+
+  allAnimes = await loadAnimes();
+  renderAll();
+}
+
+function renderAll() {
+  renderHero();
+  renderRecent();
+  renderTopList("views");
+  renderGenreTags();
+}
+
+function renderHero() {
+  heroAnimes = [...allAnimes].sort((a,b) => {
+    const av = viewsData[a.name]?.views || 0;
+    const bv = viewsData[b.name]?.views || 0;
+    return bv - av;
+  }).slice(0, 5);
+  if (heroAnimes.length === 0) {
+    document.getElementById("heroSection").style.display = "none";
+    return;
+  }
+  setHeroSlide(0);
+  renderHeroDots();
+  clearInterval(heroTimer);
+  heroTimer = setInterval(() => {
+    heroIndex = (heroIndex + 1) % heroAnimes.length;
+    setHeroSlide(heroIndex);
+  }, 5000);
+}
+
+function setHeroSlide(idx) {
+  heroIndex = idx;
+  const a = heroAnimes[idx];
+  const slide = document.getElementById("heroSlide");
+  slide.style.backgroundImage = a.thumb ? `url('${a.thumb}')` : "linear-gradient(135deg,#1a0a2e,#2d1b4e)";
+  const info = document.getElementById("heroInfo");
+  const vd = viewsData[a.name] || {};
+  const rating = vd.ratings ? (vd.ratings.reduce((s,r)=>s+r.score,0)/vd.ratings.length).toFixed(1) : "N/A";
+  info.innerHTML = `
+    <div class="hero-badges">${a.genres.slice(0,3).map(g=>`<span class="genre-badge">${g}</span>`).join('')}</div>
+    <h1>${a.name}</h1>
+    <p>${a.desc ? a.desc.substring(0,160)+'...' : 'No description available.'}</p>
+    <div class="hero-stats">
+      <span>&#9733; ${rating}</span>
+      <span>&#128065; ${vd.views||0} views</span>
+      <span>&#127909; ${a.episodes.length} eps</span>
+    </div>
+    <button class="watch-now-btn" onclick="openAnime('${a.name}')">Watch Now</button>
+  `;
+  document.querySelectorAll(".hero-dot").forEach((d,i) => d.classList.toggle("active", i===idx));
+}
+
+function renderHeroDots() {
+  const c = document.getElementById("heroDots");
+  c.innerHTML = heroAnimes.map((_,i) => `<span class="hero-dot${i===0?' active':''}" onclick="setHeroSlide(${i})"></span>`).join('');
+}
+
+function renderRecent() {
+  const grid = document.getElementById("recentGrid");
+  const sorted = [...allAnimes].sort((a,b) => {
+    const av = viewsData[a.name]?.views || 0;
+    const bv = viewsData[b.name]?.views || 0;
+    return bv - av;
+  });
+  grid.innerHTML = sorted.map(a => animeCard(a)).join('');
+}
+
+function renderTopList(sort) {
+  const list = document.getElementById("topList");
+  const sorted = [...allAnimes].sort((a,b) => {
+    const av = viewsData[a.name] || {};
+    const bv = viewsData[b.name] || {};
+    if (sort === "rating") {
+      const ar = av.ratings ? av.ratings.reduce((s,r)=>s+r.score,0)/av.ratings.length : 0;
+      const br = bv.ratings ? bv.ratings.reduce((s,r)=>s+r.score,0)/bv.ratings.length : 0;
+      return br - ar;
+    }
+    return (bv.views||0) - (av.views||0);
+  }).slice(0,10);
+  list.innerHTML = sorted.map((a,i) => {
+    const vd = viewsData[a.name] || {};
+    const rating = vd.ratings ? (vd.ratings.reduce((s,r)=>s+r.score,0)/vd.ratings.length).toFixed(1) : "N/A";
+    return `<div class="top-item" onclick="openAnime('${a.name}')">
+      <span class="top-rank">${i+1}</span>
+      ${a.thumb ? `<img src="${a.thumb}" class="top-thumb">` : `<div class="top-thumb-placeholder"></div>`}
+      <div class="top-info">
+        <span class="top-name">${a.name}</span>
+        <span class="top-views">&#9733; ${rating} &nbsp; &#128065; ${vd.views||0}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderGenreTags() {
+  const allGenres = [...new Set(allAnimes.flatMap(a => a.genres))].sort();
+  document.getElementById("genreTags").innerHTML = allGenres.map(g =>
+    `<span class="genre-tag" onclick="filterGenre('${g}')">${g}</span>`
+  ).join('');
+}
+
+function animeCard(a) {
+  const vd = viewsData[a.name] || {};
+  const rating = vd.ratings ? (vd.ratings.reduce((s,r)=>s+r.score,0)/vd.ratings.length).toFixed(1) : null;
+  return `<div class="anime-card" onclick="openAnime('${a.name}')">
+    <div class="card-thumb">
+      ${a.thumb ? `<img src="${a.thumb}" alt="${a.name}" loading="lazy">` : `<div class="thumb-placeholder"><span>${a.name[0]}</span></div>`}
+      <div class="card-overlay">
+        <span class="play-icon">&#9654;</span>
+      </div>
+      <div class="card-badges">
+        <span class="ep-badge">EP ${a.episodes.length}</span>
+        ${vd.views ? `<span class="view-badge">&#128065; ${vd.views}</span>` : ''}
+      </div>
+    </div>
+    <div class="card-info">
+      <div class="card-title">${a.name}</div>
+      ${rating ? `<div class="card-rating">&#9733; ${rating}</div>` : ''}
+      <div class="card-genres">${a.genres.slice(0,2).map(g=>`<span>${g}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function filterGenre(genre) {
+  document.getElementById("genreHeader").style.display = "block";
+  document.getElementById("genreTitle").textContent = genre;
+  document.getElementById("searchHeader").style.display = "none";
+  const filtered = allAnimes.filter(a => a.genres.includes(genre));
+  document.getElementById("genreGrid").innerHTML = filtered.map(a => animeCard(a)).join('');
+  document.getElementById("genreGrid").scrollIntoView({ behavior: "smooth" });
+}
+
+async function openAnime(name) {
+  const a = allAnimes.find(x => x.name === name);
+  if (!a) return;
+  currentAnime = a;
+
+  if (!viewsData[name]) viewsData[name] = { views: 0, ratings: [] };
+  viewsData[name].views = (viewsData[name].views || 0) + 1;
+
+  const saved = await loadJSON("Data/Views.json");
+  window._vdSha = saved.sha;
+  const merged = { ...saved.data };
+  if (!merged[name]) merged[name] = { views: 0, ratings: [] };
+  merged[name].views = (merged[name].views || 0) + 1;
+  saveJSON("Data/Views.json", merged, window._vdSha).then(r => {
+    if (r?.content) window._vdSha = r.content.sha;
+  });
+  viewsData = merged;
+
+  document.getElementById("playerTitle").textContent = name;
+  const vd = viewsData[name] || {};
+  const rating = vd.ratings && vd.ratings.length
+    ? (vd.ratings.reduce((s,r)=>s+r.score,0)/vd.ratings.length).toFixed(1)
+    : "No ratings yet";
+  const count = vd.ratings ? vd.ratings.length : 0;
+  document.getElementById("playerRating").innerHTML = `&#9733; ${rating} <span>(${count} reviews)</span>`;
+  document.getElementById("playerDesc").textContent = a.desc || "No description available.";
+  document.getElementById("playerGenres").innerHTML = a.genres.map(g=>`<span class="genre-badge">${g}</span>`).join('');
+
+  const epList = document.getElementById("epList");
+  epList.innerHTML = a.episodes.map((ep,i) => {
+    const num = ep.name.split('.')[0];
+    return `<button class="ep-btn" data-idx="${i}" onclick="playEpisode(${i})">EP ${num}</button>`;
+  }).join('');
+
+  if (a.episodes.length > 0) playEpisode(0);
+
+  document.getElementById("playerModal").classList.add("active");
+  document.getElementById("overlay").classList.add("active");
+  renderTopList("views");
+  renderRecent();
+}
+
+function playEpisode(idx) {
+  const a = currentAnime;
+  if (!a || !a.episodes[idx]) return;
+  const ep = a.episodes[idx];
+  const videoUrl = `${RAW}/Animes/${a.name}/${ep.name}`;
+  const player = document.getElementById("videoPlayer");
+  player.src = videoUrl;
+  player.load();
+  document.getElementById("playerEpLabel").textContent = `Episode ${ep.name.split('.')[0]}`;
+  document.querySelectorAll(".ep-btn").forEach((b,i) => b.classList.toggle("active", i===idx));
+}
+
+function updateAuthUI() {
+  const btn = document.getElementById("authBtn");
+  if (currentUser) {
+    btn.textContent = currentUser.username;
+    btn.classList.add("logged-in");
+  } else {
+    btn.textContent = "Sign in";
+    btn.classList.remove("logged-in");
+  }
+}
+
+document.getElementById("authBtn").onclick = () => {
+  if (currentUser) {
+    currentUser = null;
+    localStorage.removeItem("animeUser");
+    updateAuthUI();
+    return;
+  }
+  openModal("authModal");
+};
+
+document.getElementById("closeAuth").onclick = () => closeModal("authModal");
+document.getElementById("closePlayer").onclick = () => {
+  closeModal("playerModal");
+  document.getElementById("videoPlayer").pause();
+};
+document.getElementById("closeReview").onclick = () => closeModal("reviewModal");
+
+document.getElementById("tabSignin").onclick = () => {
+  document.getElementById("tabSignin").classList.add("active");
+  document.getElementById("tabSignup").classList.remove("active");
+  document.getElementById("signinForm").style.display = "";
+  document.getElementById("signupForm").style.display = "none";
+};
+document.getElementById("tabSignup").onclick = () => {
+  document.getElementById("tabSignup").classList.add("active");
+  document.getElementById("tabSignin").classList.remove("active");
+  document.getElementById("signupForm").style.display = "";
+  document.getElementById("signinForm").style.display = "none";
+};
+
+document.getElementById("doSignin").onclick = async () => {
+  const u = document.getElementById("siUsername").value.trim();
+  const p = document.getElementById("siPassword").value;
+  const err = document.getElementById("siError");
+  if (!u || !p) { err.textContent = "Fill all fields"; return; }
+  const fresh = await loadJSON("Data/User_Data.json");
+  userData = fresh.data;
+  window._udSha = fresh.sha;
+  const users = userData.users || [];
+  const found = users.find(x => x.username === u);
+  if (!found) { err.textContent = "User not found"; return; }
+  if (found.password !== btoa(p)) { err.textContent = "Wrong password"; return; }
+  currentUser = { username: found.username, email: found.email };
+  localStorage.setItem("animeUser", JSON.stringify(currentUser));
+  updateAuthUI();
+  closeModal("authModal");
+};
+
+document.getElementById("doSignup").onclick = async () => {
+  const u = document.getElementById("suUsername").value.trim();
+  const e = document.getElementById("suEmail").value.trim();
+  const p = document.getElementById("suPassword").value;
+  const err = document.getElementById("suError");
+  if (!u || !e || !p) { err.textContent = "Fill all fields"; return; }
+  if (p.length < 6) { err.textContent = "Password min 6 chars"; return; }
+  const fresh = await loadJSON("Data/User_Data.json");
+  userData = fresh.data;
+  window._udSha = fresh.sha;
+  if (!userData.users) userData.users = [];
+  if (userData.users.find(x => x.username === u)) { err.textContent = "Username taken"; return; }
+  if (userData.users.find(x => x.email === e)) { err.textContent = "Email already used"; return; }
+  userData.users.push({ username: u, email: e, password: btoa(p), joined: Date.now() });
+  const res = await saveJSON("Data/User_Data.json", userData, window._udSha);
+  if (res?.content) window._udSha = res.content.sha;
+  currentUser = { username: u, email: e };
+  localStorage.setItem("animeUser", JSON.stringify(currentUser));
+  updateAuthUI();
+  closeModal("authModal");
+};
+
+document.getElementById("openReviewBtn").onclick = () => {
+  if (!currentUser) { openModal("authModal"); return; }
+  const vd = viewsData[currentAnime?.name] || {};
+  const existing = vd.ratings?.find(r => r.user === currentUser.username);
+  selectedRating = existing ? existing.score : 0;
+  highlightStars(selectedRating);
+  document.getElementById("starLabel").textContent = existing
+    ? `Your current rating: ${existing.score}/10`
+    : "Select a rating";
+  openModal("reviewModal");
+};
+
+document.querySelectorAll(".star-opt").forEach(s => {
+  s.onmouseenter = () => highlightStars(parseInt(s.dataset.v));
+  s.onmouseleave = () => highlightStars(selectedRating);
+  s.onclick = () => {
+    selectedRating = parseInt(s.dataset.v);
+    highlightStars(selectedRating);
+    document.getElementById("starLabel").textContent = `Rating: ${selectedRating}/10`;
+  };
+});
+
+function highlightStars(n) {
+  document.querySelectorAll(".star-opt").forEach(s => {
+    s.classList.toggle("active", parseInt(s.dataset.v) <= n);
+  });
+}
+
+document.getElementById("submitReview").onclick = async () => {
+  if (!selectedRating || !currentAnime) return;
+  const name = currentAnime.name;
+  const fresh = await loadJSON("Data/Views.json");
+  window._vdSha = fresh.sha;
+  const merged = { ...fresh.data };
+  if (!merged[name]) merged[name] = { views: 0, ratings: [] };
+  if (!merged[name].ratings) merged[name].ratings = [];
+  const idx = merged[name].ratings.findIndex(r => r.user === currentUser.username);
+  if (idx >= 0) {
+    merged[name].ratings[idx].score = selectedRating;
+  } else {
+    merged[name].ratings.push({ user: currentUser.username, score: selectedRating, date: Date.now() });
+  }
+  viewsData = merged;
+  const res = await saveJSON("Data/Views.json", merged, window._vdSha);
+  if (res?.content) window._vdSha = res.content.sha;
+  closeModal("reviewModal");
+  const rcount = merged[name].ratings.length;
+  const ravg = (merged[name].ratings.reduce((s,r)=>s+r.score,0)/rcount).toFixed(1);
+  document.getElementById("playerRating").innerHTML = `&#9733; ${ravg} <span>(${rcount} reviews)</span>`;
+};
+
+document.getElementById("searchBtn").onclick = doSearch;
+document.getElementById("searchInput").onkeydown = e => { if (e.key === "Enter") doSearch(); };
+document.getElementById("searchInput").oninput = function() {
+  const q = this.value.trim().toLowerCase();
+  const dd = document.getElementById("searchDropdown");
+  if (!q) { dd.style.display = "none"; return; }
+  const matches = allAnimes.filter(a => a.name.toLowerCase().includes(q)).slice(0,6);
+  if (!matches.length) { dd.style.display = "none"; return; }
+  dd.innerHTML = matches.map(a =>
+    `<div class="dd-item" onclick="openAnime('${a.name}')">${a.name}</div>`
+  ).join('');
+  dd.style.display = "block";
+};
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-wrap")) {
+    document.getElementById("searchDropdown").style.display = "none";
+  }
+});
+
+function doSearch() {
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  document.getElementById("searchDropdown").style.display = "none";
+  if (!q) return;
+  document.getElementById("searchHeader").style.display = "block";
+  document.getElementById("searchTitle").textContent = `Results for "${q}"`;
+  document.getElementById("genreHeader").style.display = "none";
+  const results = allAnimes.filter(a => a.name.toLowerCase().includes(q) || a.genres.some(g => g.toLowerCase().includes(q)));
+  document.getElementById("searchGrid").innerHTML = results.length
+    ? results.map(a => animeCard(a)).join('')
+    : '<p class="no-results">No anime found.</p>';
+  document.getElementById("searchGrid").scrollIntoView({ behavior: "smooth" });
+}
+
+document.getElementById("randomBtn").onclick = () => {
+  if (!allAnimes.length) return;
+  const a = allAnimes[Math.floor(Math.random() * allAnimes.length)];
+  openAnime(a.name);
+};
+
+document.getElementById("menuToggle").onclick = () => {
+  document.getElementById("sidenav").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("nav-active");
+};
+document.getElementById("overlay").onclick = () => {
+  document.getElementById("sidenav").classList.remove("open");
+  document.getElementById("overlay").classList.remove("nav-active");
+  closeModal("authModal");
+  closeModal("playerModal");
+  closeModal("reviewModal");
+  document.getElementById("videoPlayer").pause();
+};
+
+document.querySelectorAll(".top-tab").forEach(t => {
+  t.onclick = function() {
+    document.querySelectorAll(".top-tab").forEach(x => x.classList.remove("active"));
+    this.classList.add("active");
+    renderTopList(this.dataset.sort);
+  };
+});
+
+function openModal(id) {
+  document.getElementById(id).classList.add("active");
+  document.getElementById("overlay").classList.add("active");
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("active");
+  const anyOpen = document.querySelector(".modal.active");
+  if (!anyOpen) document.getElementById("overlay").classList.remove("active");
+}
+
+init();
+</script>
+</body>
+</html>
