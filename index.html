@@ -429,7 +429,7 @@ async function loadAnimes(){
 
   const ajFiles=tree.tree.filter(f=>
     f.type==="blob"&&
-    f.path.split("/").pop().toLowerCase()==="anime.json"&&
+    f.path.split("/").pop().toLowerCase()==="Anime.json"&&
     f.path.startsWith("Animes/")
   );
   console.log("Anime.json files found:",ajFiles.map(f=>f.path));
