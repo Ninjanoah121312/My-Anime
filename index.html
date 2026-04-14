@@ -5,62 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My-Anime</title>
 <style>
-/* ==================== FULL CSS ==================== */
+/* FULL CSS */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
 --bg:#0d0d1a;--bg2:#12122a;--bg3:#1a1a35;--card:#161630;--border:#252550;--purple:#7c3aed;--purple2:#6d28d9;--pl:#a78bfa;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--gold:#f59e0b;--red:#ef4444;--green:#22c55e;--header:62px;--r:8px;
 }
-.light-mode{
---bg:#f0f2f5;--bg2:#fff;--bg3:#e8eaed;--card:#fff;--border:#d1d5db;--text:#1f2937;--text2:#4b5563;--text3:#9ca3af;
-}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
-a{text-decoration:none;color:inherit}
-img{display:block;max-width:100%}
-button{cursor:pointer;font-family:inherit}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
 .loader-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:9999}
 .loader-logo{font-size:40px;font-weight:900;display:flex;align-items:center;gap:4px}
 .loader-bar{width:280px;height:4px;background:var(--bg3);border-radius:4px;overflow:hidden}
 .loader-fill{height:100%;background:var(--purple);border-radius:4px;transition:width .4s;width:0}
-.loader-msg{color:var(--text2);font-size:14px}
-header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.header-inner{display:flex;align-items:center;gap:12px;padding:0 20px;height:var(--header)}
-.menu-btn{background:none;border:none;color:var(--text);font-size:22px;padding:6px 8px;border-radius:6px;transition:background .2s}
-.menu-btn:hover{background:var(--bg3)}
+.header-inner{display:flex;align-items:center;gap:12px;padding:0 20px;height:62px}
 .logo{font-size:26px;font-weight:900;display:flex;align-items:center;gap:3px}
-.logo-num{background:var(--purple);color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900}
-.logo-txt{color:var(--text)}
+.logo-num{background:var(--purple);color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center}
 .search-wrap{position:relative;flex:1;max-width:500px}
-.search-wrap input{flex:1;background:var(--bg3);border:1px solid var(--border);border-right:none;color:var(--text);padding:9px 14px;border-radius:var(--r) 0 0 var(--r);outline:none}
-.search-wrap>button{background:var(--purple);border:none;color:#fff;padding:0 16px;border-radius:0 var(--r) var(--r) 0;font-size:18px}
-.search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);display:none;z-index:200}
-.dd-item{padding:10px 16px;cursor:pointer}
-.dd-item:hover{background:var(--bg3)}
-.icon-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:50%;font-size:18px}
-.auth-btn{background:var(--purple);border:none;color:#fff;padding:8px 20px;border-radius:20px;font-weight:700}
-.profile-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:20px;display:flex;align-items:center;gap:8px}
-.profile-avatar{background:var(--purple);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
-.sidenav{position:fixed;top:0;left:-250px;width:250px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);z-index:150;transition:left .3s}
-.sidenav.open{left:0}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:130;display:none}
-.overlay.active{display:block}
-.modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center}
-.modal.active{display:flex}
-.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:440px}
-.player-page-inner{max-width:1440px;margin:0 auto;padding:0 20px 40px}
-.video-wrap{position:relative;background:#000;border-radius:var(--r) var(--r) 0 0;overflow:hidden}
-.video-wrap video{width:100%;display:block;max-height:510px}
-.ep-grid{display:flex;flex-wrap:wrap;gap:8px}
-.ep-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:6px;min-width:66px;text-align:center}
-.ep-btn.active{background:var(--purple);color:#fff}
-.pms-title{font-size:22px;font-weight:800}
+.search-wrap input{flex:1;background:var(--bg3);border:1px solid var(--border);border-right:none;color:var(--text);padding:9px 14px;border-radius:8px 0 0 8px;outline:none}
+.search-wrap>button{background:var(--purple);border:none;color:#fff;padding:0 16px;border-radius:0 8px 8px 0}
 .anime-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(162px,1fr));gap:16px}
-.anime-card{background:var(--card);border-radius:var(--r);overflow:hidden;cursor:pointer}
-.card-title{font-size:13px;font-weight:700}
-@media(max-width:640px){
-  .video-wrap video{max-height:240px}
-  .anime-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
-}
+.anime-card{background:var(--card);border-radius:8px;overflow:hidden;cursor:pointer}
+.card-img img{width:100%;height:240px;object-fit:cover}
+.card-title{font-size:13px;font-weight:700;padding:8px}
+.player-page-inner{padding:20px}
+.video-wrap video{width:100%;max-height:510px;background:#000}
+.ep-grid{display:flex;flex-wrap:wrap;gap:8px}
+.ep-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:6px}
+.ep-btn.active{background:var(--purple);color:#fff}
 </style>
 </head>
 <body class="dark-mode">
@@ -68,7 +37,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
 <div id="loaderScreen" class="loader-screen">
   <div class="loader-logo"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></div>
   <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
-  <p class="loader-msg" id="loaderMsg">Loading anime from root anime.json...</p>
+  <p class="loader-msg" id="loaderMsg">Loading anime.json from root...</p>
 </div>
 
 <header id="siteHeader" style="display:none">
@@ -78,61 +47,33 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
     <div class="search-wrap">
       <input type="text" id="searchInput" placeholder="Search anime..." autocomplete="off">
       <button id="searchBtn">🔍</button>
-      <div class="search-dropdown" id="searchDropdown"></div>
     </div>
-    <div class="header-actions">
-      <button class="icon-btn" id="randomBtn">🎲</button>
-      <button class="auth-btn" id="authBtn">Sign in</button>
-    </div>
+    <button class="icon-btn" id="randomBtn">🎲</button>
   </div>
 </header>
 
-<nav class="sidenav" id="sidenav">
-  <div class="sidenav-logo"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></div>
-  <a href="#" class="nav-link" onclick="showPage('home');closeSidenav();return false">HOME</a>
-  <a href="#" class="nav-link" onclick="showPage('genres');closeSidenav();return false">GENRES</a>
-  <a href="#" class="nav-link" onclick="showPage('favorites');closeSidenav();return false">FAVORITES</a>
-</nav>
-
-<div class="overlay" id="overlay" onclick="closeAll()"></div>
-
-<!-- Player Page -->
 <div id="playerPage" style="display:none">
   <div class="player-page-inner">
-    <div class="breadcrumb">
-      <span onclick="closePlayerPage()">← Back</span>
-      <span id="bcTitle"></span>
+    <div onclick="closePlayerPage()" style="cursor:pointer;margin-bottom:10px">← Back</div>
+    <div class="video-wrap">
+      <video id="videoEl" controls></video>
     </div>
-    <div class="video-wrap" id="videoWrap">
-      <video id="videoEl" controls playsinline></video>
+    <div style="margin:15px 0">
+      <div id="playerTypeTabs" style="display:flex;gap:10px;margin-bottom:10px"></div>
+      <div id="epGrid" class="ep-grid"></div>
     </div>
-    <div class="ep-list-section">
-      <div class="ep-tabs" id="playerTypeTabs"></div>
-      <div class="ep-grid" id="epGrid"></div>
-    </div>
-    <div class="player-meta-section">
-      <div class="pms-left">
-        <div class="pms-title" id="pmsTitle"></div>
-        <div class="pms-genres" id="pmsGenres"></div>
-        <p class="pms-desc" id="pmsDesc"></p>
-      </div>
+    <div>
+      <h2 id="pmsTitle"></h2>
+      <div id="pmsGenres"></div>
+      <p id="pmsDesc"></p>
     </div>
   </div>
 </div>
 
-<!-- Main Content -->
-<main id="mainContent" style="display:none">
+<main id="mainContent" style="display:none;padding:20px">
   <div id="homePage">
-    <div class="section-head"><h2>Recently Added</h2></div>
+    <h2>Recently Added</h2>
     <div class="anime-grid" id="recentGrid"></div>
-  </div>
-  <div id="searchPage" style="display:none">
-    <div class="section-head"><h2 id="searchTitle">Search Results</h2></div>
-    <div class="anime-grid" id="searchGrid"></div>
-  </div>
-  <div id="favoritesPage" style="display:none">
-    <div class="section-head"><h2>My Favorites</h2></div>
-    <div class="anime-grid" id="favoritesGrid"></div>
   </div>
 </main>
 
@@ -141,13 +82,11 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
 const OWNER = "Ninjanoah121312";
 const REPO = "My-Anime";
 const BRANCH = "main";
-const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
 const GHAPI = `https://api.github.com/repos/${OWNER}/${REPO}`;
 
 let allAnimes = [];
 let currentAnime = null;
 let currentDub = "sub";
-let currentEpIdx = 0;
 
 async function apiGet(path) {
   try {
@@ -158,10 +97,9 @@ async function apiGet(path) {
 }
 
 async function loadAnimes() {
-  // Load anime.json from ROOT directory
   const central = await apiGet("anime.json");
   if (!central || !central.content) {
-    console.error("Could not load anime.json from root");
+    document.getElementById("loaderMsg").innerHTML = "No anime.json found in root.<br>Please make sure the file exists.";
     return [];
   }
 
@@ -174,7 +112,7 @@ async function loadAnimes() {
     for (const aj of data) {
       const episodes = [];
 
-      // SUB episodes - "EP: 1": "link"
+      // SUB
       if (aj.sub && typeof aj.sub === "object") {
         Object.keys(aj.sub).forEach(key => {
           episodes.push({
@@ -186,7 +124,7 @@ async function loadAnimes() {
         });
       }
 
-      // DUB episodes - "EP: 1": "link"
+      // DUB
       if (aj.dub && typeof aj.dub === "object") {
         Object.keys(aj.dub).forEach(key => {
           episodes.push({
@@ -205,26 +143,21 @@ async function loadAnimes() {
         episodes: episodes,
         image: aj.image,
         desc: aj.description || "",
-        genres: aj.genres || [],
-        status: aj.status || "",
-        studios: aj.studios || []
+        genres: aj.genres || []
       });
     }
     return list;
   } catch(e) {
-    console.error("Error parsing anime.json:", e);
+    console.error(e);
+    document.getElementById("loaderMsg").textContent = "Error reading anime.json";
     return [];
   }
 }
 
 async function init() {
-  document.getElementById("loaderMsg").textContent = "Loading anime from root anime.json...";
   allAnimes = await loadAnimes();
 
-  if (allAnimes.length === 0) {
-    document.getElementById("loaderMsg").innerHTML = "No anime found.<br>Make sure anime.json exists in root.";
-    return;
-  }
+  if (allAnimes.length === 0) return;
 
   document.getElementById("loaderScreen").style.display = "none";
   document.getElementById("siteHeader").style.display = "";
@@ -247,115 +180,74 @@ function renderRecent() {
   `).join("");
 }
 
-async function openAnime(name) {
+function openAnime(name) {
   currentAnime = allAnimes.find(a => a.name === name);
   if (!currentAnime) return;
 
   currentDub = currentAnime.episodes.some(e => e.type === "sub") ? "sub" : "dub";
-  currentEpIdx = 0;
 
   document.getElementById("mainContent").style.display = "none";
   document.getElementById("playerPage").style.display = "";
 
   document.getElementById("bcTitle").textContent = currentAnime.name;
   document.getElementById("pmsTitle").textContent = currentAnime.name;
-  document.getElementById("pmsDesc").textContent = currentAnime.desc || "No description available.";
-  document.getElementById("pmsGenres").innerHTML = currentAnime.genres.map(g => `<span style="background:#4c1d95;color:#ddd;padding:2px 8px;border-radius:12px;margin-right:4px;font-size:12px">${g}</span>`).join("");
+  document.getElementById("pmsDesc").textContent = currentAnime.desc || "";
 
   buildPlayerUI();
-  const firstEp = currentAnime.episodes.find(e => e.type === currentDub);
-  if (firstEp) playEp(firstEp);
 }
 
 function buildPlayerUI() {
   const hasSub = currentAnime.episodes.some(e => e.type === "sub");
   const hasDub = currentAnime.episodes.some(e => e.type === "dub");
 
-  const tabs = document.getElementById("playerTypeTabs");
-  tabs.innerHTML = "";
-  if (hasSub) tabs.innerHTML += `<button class="ptab ${currentDub==='sub'?'active':''}" onclick="switchDub('sub')">SUB</button>`;
-  if (hasDub) tabs.innerHTML += `<button class="ptab ${currentDub==='dub'?'active':''}" onclick="switchDub('dub')">DUB</button>`;
+  let tabsHTML = "";
+  if (hasSub) tabsHTML += `<button onclick="switchDub('sub')" style="padding:8px 16px;margin-right:8px;background:${currentDub==='sub'?'#7c3aed':'#333'}">SUB</button>`;
+  if (hasDub) tabsHTML += `<button onclick="switchDub('dub')" style="padding:8px 16px;background:${currentDub==='dub'?'#7c3aed':'#333'}">DUB</button>`;
 
+  document.getElementById("playerTypeTabs").innerHTML = tabsHTML;
   buildEpGrid();
 }
 
 function switchDub(mode) {
   currentDub = mode;
   buildPlayerUI();
-  const eps = currentAnime.episodes.filter(e => e.type === mode);
-  if (eps.length) playEp(eps[0]);
 }
 
 function buildEpGrid() {
   const eps = currentAnime.episodes.filter(e => e.type === currentDub);
-  const grid = document.getElementById("epGrid");
-  grid.innerHTML = eps.map((ep, i) => `
-    <button class="ep-btn ${i===currentEpIdx?'active':''}" onclick="playEpByIndex(${i})">${ep.label}</button>
+  document.getElementById("epGrid").innerHTML = eps.map((ep, i) => `
+    <button class="ep-btn" onclick="playEp(${i})">${ep.label}</button>
   `).join("");
 }
 
-function playEpByIndex(idx) {
-  currentEpIdx = idx;
+function playEp(idx) {
   const eps = currentAnime.episodes.filter(e => e.type === currentDub);
-  playEp(eps[idx]);
-}
-
-function playEp(ep) {
+  const ep = eps[idx];
   const video = document.getElementById("videoEl");
   video.src = ep.url;
-  video.load();
-  video.play().catch(() => {});
-  document.getElementById("watchingEp").textContent = ep.label;
-  buildEpGrid();
+  video.play().catch(()=>{});
 }
 
 function closePlayerPage() {
   document.getElementById("playerPage").style.display = "none";
   document.getElementById("mainContent").style.display = "";
-  const video = document.getElementById("videoEl");
-  video.pause();
-  video.src = "";
+  document.getElementById("videoEl").pause();
 }
 
 function showPage(page) {
+  // simple for now
   document.getElementById("homePage").style.display = page === "home" ? "" : "none";
-  document.getElementById("searchPage").style.display = page === "search" ? "" : "none";
-  document.getElementById("favoritesPage").style.display = page === "favorites" ? "" : "none";
 }
-
-function doSearch() {
-  const q = document.getElementById("searchInput").value.trim().toLowerCase();
-  if (!q) return;
-  const results = allAnimes.filter(a => a.name.toLowerCase().includes(q));
-  document.getElementById("searchTitle").textContent = `Results for "${q}"`;
-  document.getElementById("searchGrid").innerHTML = results.map(a => `
-    <div class="anime-card" onclick="openAnime('${a.name.replace(/'/g, "\\'")}')">
-      <div class="card-img">
-        ${a.image ? `<img src="${a.image}" alt="${a.name}">` : `<div style="height:240px;background:#222;display:flex;align-items:center;justify-content:center;font-size:60px;color:#666">${a.name[0]}</div>`}
-      </div>
-      <div class="card-body">
-        <div class="card-title">${a.name}</div>
-      </div>
-    </div>
-  `).join("");
-  showPage("search");
-}
-
-document.getElementById("searchBtn").onclick = doSearch;
-document.getElementById("searchInput").addEventListener("keypress", e => { if (e.key === "Enter") doSearch(); });
 
 document.getElementById("randomBtn").onclick = () => {
-  if (!allAnimes.length) return;
-  const random = allAnimes[Math.floor(Math.random() * allAnimes.length)];
-  openAnime(random.name);
+  if (allAnimes.length === 0) return;
+  const randomAnime = allAnimes[Math.floor(Math.random() * allAnimes.length)];
+  openAnime(randomAnime.name);
 };
 
-document.getElementById("menuToggle").onclick = () => document.getElementById("sidenav").classList.toggle("open");
-
-function closeAll() {
-  document.getElementById("overlay").classList.remove("active");
-  document.getElementById("sidenav").classList.remove("open");
-}
+document.getElementById("menuToggle").onclick = () => {
+  document.getElementById("sidenav").classList.toggle("open");
+};
 
 init();
 </script>
