@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>9Anime</title>
+<title>My-Anime</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dark-mode">
 
 <div id="loaderScreen" class="loader-screen">
-  <div class="loader-logo"><span class="logo-num">9</span><span class="logo-txt">Anime</span></div>
+  <div class="loader-logo"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></div>
   <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
-  <p class="loader-msg" id="loaderMsg">Connecting to GitHub...</p>
+  <p class="loader-msg" id="loaderMsg">Connecting...</p>
 </div>
 
 <header id="siteHeader" style="display:none">
   <div class="header-inner">
     <button class="menu-btn" id="menuToggle">&#9776;</button>
-    <div class="logo"><span class="logo-num">9</span><span class="logo-txt">Anime</span></div>
+    <a href="#" class="logo" onclick="showPage('home');return false">
+      <span class="logo-num">M</span><span class="logo-txt">y-Anime</span>
+    </a>
     <div class="search-wrap">
       <input type="text" id="searchInput" placeholder="Enter anime name" autocomplete="off">
       <button id="searchBtn">&#128269;</button>
@@ -25,79 +27,213 @@
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="randomBtn" title="Random Anime">&#127922;</button>
+      <div class="profile-wrap" id="profileWrap" style="display:none">
+        <button class="profile-btn" id="profileBtn">
+          <span class="profile-avatar" id="profileAvatar">?</span>
+          <span id="profileName"></span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown" style="display:none">
+          <div class="pd-info">
+            <div class="pd-avatar" id="pdAvatar">?</div>
+            <div>
+              <div class="pd-username" id="pdUsername"></div>
+              <div class="pd-uid" id="pdUID"></div>
+            </div>
+          </div>
+          <hr class="pd-divider">
+          <button class="pd-btn" onclick="showPage('favorites');closeProfileDD()">&#9733; Favorites</button>
+          <button class="pd-btn" onclick="openEditProfile()">&#9998; Edit Profile</button>
+          <button class="pd-btn danger" onclick="doSignout()">&#10148; Sign Out</button>
+        </div>
+      </div>
       <button class="auth-btn" id="authBtn">Sign in</button>
     </div>
   </div>
 </header>
 
 <nav class="sidenav" id="sidenav">
-  <div class="sidenav-logo"><span class="logo-num">9</span><span class="logo-txt">Anime</span></div>
+  <div class="sidenav-logo"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></div>
   <a href="#" class="nav-link" onclick="showPage('home');closeSidenav();return false">HOME</a>
   <a href="#" class="nav-link" onclick="showPage('genres');closeSidenav();return false">GENRES</a>
+  <a href="#" class="nav-link" onclick="showPage('favorites');closeSidenav();return false">FAVORITES</a>
   <a href="#" class="nav-link" onclick="openRandom();closeSidenav();return false">RANDOM</a>
 </nav>
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
+<!-- Auth Modal -->
 <div class="modal" id="authModal">
-  <div class="modal-box">
+  <div class="modal-box auth-box">
     <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
+    <div class="auth-art">
+      <div class="auth-art-inner">&#128099;</div>
+    </div>
+    <h2 class="auth-title" id="authTitle">Member Login</h2>
+    <p class="auth-sub">My-Anime - watch anime for free!</p>
     <div class="modal-tabs">
       <button class="tab-btn active" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
       <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
     </div>
     <div id="signinForm">
-      <input type="text" id="siUser" placeholder="Username">
-      <input type="password" id="siPass" placeholder="Password">
+      <div class="input-group">
+        <input type="text" id="siUser" placeholder="Username or Email">
+        <span class="input-icon">&#128100;</span>
+      </div>
+      <div class="input-group">
+        <input type="password" id="siPass" placeholder="Password">
+        <span class="input-icon">&#128274;</span>
+      </div>
+      <div class="remember-row">
+        <label class="check-label"><input type="checkbox" id="siRemember"> Remember me</label>
+      </div>
       <div class="form-err" id="siErr"></div>
-      <button class="submit-btn" onclick="doSignin()">Sign In</button>
+      <button class="submit-btn" onclick="doSignin()">Login</button>
+      <p class="switch-txt">Don't have an account? <span onclick="switchTab('signup')">Register</span></p>
     </div>
     <div id="signupForm" style="display:none">
-      <input type="text" id="suUser" placeholder="Username">
-      <input type="email" id="suEmail" placeholder="Email">
-      <input type="password" id="suPass" placeholder="Password (min 6)">
+      <div class="input-group">
+        <input type="text" id="suUser" placeholder="Username *">
+        <span class="input-icon">&#128100;</span>
+      </div>
+      <div class="input-group">
+        <input type="email" id="suEmail" placeholder="Email (recommended)">
+        <span class="input-icon">&#9993;</span>
+      </div>
+      <div class="input-group">
+        <input type="password" id="suPass" placeholder="Password (min 6) *">
+        <span class="input-icon">&#128274;</span>
+      </div>
+      <div class="input-group">
+        <input type="number" id="suAge" placeholder="Age (optional, permanent once set)" min="1" max="120">
+        <span class="input-icon">&#127874;</span>
+      </div>
+      <div class="input-group">
+        <input type="text" id="suCountry" placeholder="Country (optional)">
+        <span class="input-icon">&#127758;</span>
+      </div>
       <div class="form-err" id="suErr"></div>
       <button class="submit-btn" onclick="doSignup()">Create Account</button>
+      <p class="switch-txt">Already have an account? <span onclick="switchTab('signin')">Sign In</span></p>
     </div>
   </div>
 </div>
 
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+    <h3>Edit Profile</h3>
+    <div class="input-group"><input type="text" id="epUser" placeholder="New Username"></div>
+    <div class="input-group"><input type="email" id="epEmail" placeholder="Email"></div>
+    <div class="input-group"><input type="text" id="epCountry" placeholder="Country"></div>
+    <div class="input-group"><input type="password" id="epPassOld" placeholder="Current Password (required to change)"></div>
+    <div class="input-group"><input type="password" id="epPassNew" placeholder="New Password (leave blank to keep)"></div>
+    <div class="form-err" id="epErr"></div>
+    <button class="submit-btn" onclick="doEditProfile()">Save Changes</button>
+  </div>
+</div>
+
+<!-- Rating Modal -->
 <div class="modal" id="ratingModal">
   <div class="modal-box rating-box">
     <button class="modal-close" onclick="closeModal('ratingModal')">&times;</button>
     <h3>Rate this Anime</h3>
-    <p class="rating-subtitle" id="ratingSubtitle">Select a score out of 10</p>
+    <p class="rating-sub" id="ratingSubtitle">Select a score out of 10</p>
     <div class="star-row" id="starRow"></div>
     <p class="star-val" id="starVal">&#8212;</p>
     <button class="submit-btn" onclick="submitRating()">Submit Rating</button>
   </div>
 </div>
 
-<div class="modal" id="playerModal">
-  <div class="modal-box player-box">
-    <button class="modal-close" onclick="closePlayer()">&times;</button>
-    <div class="player-top">
-      <h2 id="playerTitle"></h2>
-      <div class="player-badges" id="playerBadges"></div>
+<!-- Player Page (full page, not modal) -->
+<div id="playerPage" style="display:none">
+  <div class="player-page-inner">
+    <div class="breadcrumb">
+      <span onclick="closePlayerPage()">Home</span>
+      <span class="bc-sep">&#8250;</span>
+      <span>TV Series</span>
+      <span class="bc-sep">&#8250;</span>
+      <span id="bcTitle"></span>
     </div>
-    <video id="videoEl" controls playsinline preload="metadata"></video>
-    <div class="player-controls-row">
-      <div class="player-tabs" id="playerTabs"></div>
-    </div>
-    <div class="ep-scroll" id="epScroll"></div>
-    <div class="player-info">
-      <div class="player-genres" id="playerGenres"></div>
-      <p class="player-desc" id="playerDesc"></p>
-      <div class="player-footer">
-        <div class="player-rating" id="playerRatingEl"></div>
-        <button class="rate-btn" onclick="openRating()">&#9733; Rate This Anime</button>
+    <div class="player-layout">
+      <div class="player-main">
+        <div class="video-wrap" id="videoWrap">
+          <video id="videoEl" controls playsinline preload="metadata"></video>
+          <div class="skip-intro-btn" id="skipIntroBtn" style="display:none" onclick="skipIntro()">Skip Intro</div>
+          <div class="video-overlay-btns">
+            <button class="vob" id="rewind10" onclick="seekVideo(-10)" title="-10s">&#8634;10</button>
+            <button class="vob" id="forward10" onclick="seekVideo(10)" title="+10s">10&#8635;</button>
+          </div>
+        </div>
+        <div class="player-bar">
+          <div class="pbar-left">
+            <label class="pcheck"><input type="checkbox" id="autoPlayChk" onchange="savePlayerPrefs()"> Auto Play</label>
+            <label class="pcheck"><input type="checkbox" id="autoNextChk" onchange="savePlayerPrefs()"> Auto Next</label>
+            <button class="pbar-btn light-toggle" onclick="toggleLight()">&#128161; Light</button>
+          </div>
+          <div class="pbar-right">
+            <button class="pbar-btn" id="prevEpBtn" onclick="prevEp()">&#10094;&#10094; Prev</button>
+            <button class="pbar-btn" id="nextEpBtn" onclick="nextEp()">Next &#10095;&#10095;</button>
+            <button class="pbar-btn" onclick="toggleExpand()">&#8596; Expand</button>
+          </div>
+        </div>
+        <div class="player-info-bar">
+          <div class="pib-left">
+            <span id="watchingLabel">You are watching <strong id="watchingEp"></strong>.</span>
+            <span class="pib-hint">If current server doesn't work please try other servers below</span>
+          </div>
+          <div class="pib-right">
+            <div class="server-row">
+              <span class="server-label"><span class="sub-dot"></span> SUB:</span>
+              <div class="server-btns" id="subServerBtns"></div>
+            </div>
+            <div class="server-row">
+              <span class="server-label"><span class="dub-dot"></span> DUB:</span>
+              <div class="server-btns" id="dubServerBtns"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ep-list-section">
+          <div class="ep-tabs" id="playerTypeTabs"></div>
+          <div class="ep-grid" id="epGrid"></div>
+        </div>
+        <div class="player-meta-section">
+          <div class="pms-left">
+            <div class="pms-title" id="pmsTitle"></div>
+            <div class="pms-genres" id="pmsGenres"></div>
+            <p class="pms-desc" id="pmsDesc"></p>
+          </div>
+          <div class="pms-right">
+            <div class="pms-rating" id="pmsRating"></div>
+            <button class="fav-btn" id="favBtn" onclick="toggleFavorite()">&#9733; Favorite</button>
+            <button class="rate-btn" onclick="openRating()">&#9733; Rate</button>
+          </div>
+        </div>
       </div>
+      <aside class="player-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">Related Anime</div>
+          <div id="relatedList"></div>
+        </div>
+        <div class="sidebar-box">
+          <div class="top-tabs">
+            <button class="top-tab active" id="ps_ttToday" onclick="switchTopTab('views','ps')">Today</button>
+            <button class="top-tab" id="ps_ttRating" onclick="switchTopTab('rating','ps')">Rating</button>
+          </div>
+          <div class="top-sub-tabs">
+            <button class="top-sub-tab active" id="ps_tttWeek" onclick="switchTopPeriod('week','ps')">Week</button>
+            <button class="top-sub-tab" id="ps_tttMonth" onclick="switchTopPeriod('month','ps')">Month</button>
+          </div>
+          <div id="ps_topList" class="top-list"></div>
+        </div>
+      </aside>
     </div>
   </div>
 </div>
 
+<!-- Main content -->
 <main id="mainContent" style="display:none">
-  <section id="heroSection" class="hero-section">
+  <div id="heroSection" class="hero-section">
     <div class="hero-slide" id="heroSlide">
       <div class="hero-overlay"></div>
       <div class="hero-info" id="heroInfo"></div>
@@ -105,38 +241,57 @@
     <button class="hero-arrow left" onclick="shiftHero(-1)">&#10094;</button>
     <button class="hero-arrow right" onclick="shiftHero(1)">&#10095;</button>
     <div class="hero-dots" id="heroDots"></div>
-  </section>
+  </div>
 
   <div class="page-wrap">
     <div class="content-col">
-
       <div id="homePage">
         <div class="section-head"><h2>Recently Updated</h2></div>
         <div class="anime-grid" id="recentGrid"></div>
+        <div class="pagination" id="homePagination"></div>
       </div>
-
       <div id="genresPage" style="display:none">
         <div class="section-head"><h2>Browse by Genre</h2></div>
         <div class="genre-big-list" id="genreBigList"></div>
       </div>
-
       <div id="searchPage" style="display:none">
         <div class="section-head"><h2 id="searchTitle">Search Results</h2></div>
         <div class="anime-grid" id="searchGrid"></div>
+        <div class="pagination" id="searchPagination"></div>
       </div>
-
       <div id="genreFilterPage" style="display:none">
         <div class="section-head"><h2 id="genreFilterTitle">Genre</h2></div>
         <div class="anime-grid" id="genreFilterGrid"></div>
+        <div class="pagination" id="genreFilterPagination"></div>
       </div>
-
+      <div id="favoritesPage" style="display:none">
+        <div class="section-head"><h2>My Favorites</h2></div>
+        <div class="anime-grid" id="favoritesGrid"></div>
+      </div>
+      <div id="recommendedPage" style="display:none">
+        <div class="section-head"><h2>Recommended For You</h2></div>
+        <div class="anime-grid" id="recommendedGrid"></div>
+      </div>
     </div>
-
     <aside class="sidebar">
+      <div class="sidebar-box quick-filter-box">
+        <div class="sidebar-box-title">Quick filter</div>
+        <div class="qf-grid">
+          <select id="qfGenre" onchange="applyQuickFilter()"><option value="">Genre All</option></select>
+          <select id="qfType" onchange="applyQuickFilter()"><option value="">Type All</option><option>SUB</option><option>DUB</option></select>
+          <select id="qfSort" onchange="applyQuickFilter()"><option value="views">Sort: Views</option><option value="rating">Sort: Rating</option><option value="az">Sort: A-Z</option></select>
+        </div>
+        <button class="filter-btn" onclick="applyQuickFilter()">&#128269; Filter</button>
+      </div>
       <div class="sidebar-box">
+        <div class="sidebar-box-title">Top Anime</div>
         <div class="top-tabs">
-          <button class="top-tab active" id="ttToday" onclick="switchTopTab('views')">Today</button>
-          <button class="top-tab" id="ttRating" onclick="switchTopTab('rating')">Rating</button>
+          <button class="top-tab active" id="ttToday" onclick="switchTopTab('views','main')">Today</button>
+          <button class="top-tab" id="ttRating" onclick="switchTopTab('rating','main')">Rating</button>
+        </div>
+        <div class="top-sub-tabs">
+          <button class="top-sub-tab active" id="tttWeek" onclick="switchTopPeriod('week','main')">Week</button>
+          <button class="top-sub-tab" id="tttMonth" onclick="switchTopPeriod('month','main')">Month</button>
         </div>
         <div id="topList" class="top-list"></div>
       </div>
@@ -154,601 +309,628 @@ const REPO   = "My-Anime";
 const BRANCH = "main";
 const RAW    = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
 const GHAPI  = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const PER_PAGE = 30;
 
 function _t() {
-  const c = [103,105,116,104,117,98,95,112,97,116,95,49,49,66,78,50,65,85,68,81,48,84,117,120,115,65,74,53,107,115,79,76,113,95,80,119,120,117,120,77,71,107,78,104,85,117,52,119,81,100,81,109,115,120,81,98,107,98,113,100,107,81,87,112,85,113,85,101,116,50,69,50,78,99,86,100,101,109,75,85,69,66,66,71,90,90,111,111,98,114,74,116,49,107];
-  return c.map(n => String.fromCharCode(n)).join('');
+  const c=[103,105,116,104,117,98,95,112,97,116,95,49,49,66,78,50,65,85,68,81,48,84,117,120,115,65,74,53,107,115,79,76,113,95,80,119,120,117,120,77,71,107,78,104,85,117,52,119,81,100,81,109,115,120,81,98,107,98,113,100,107,81,87,112,85,113,85,101,116,50,69,50,78,99,86,100,101,109,75,85,69,66,66,71,90,90,111,111,98,114,74,116,49,107];
+  return c.map(n=>String.fromCharCode(n)).join('');
 }
 
-const VIDEO_EXTS = ["mp4","webm","mkv","avi","mov","m4v","ogv","ogg","flv","wmv","3gp","ts"];
-const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","bmp","avif"];
+const VIDEO_EXTS=["mp4","webm","mkv","avi","mov","m4v","ogv","ogg","flv","wmv","3gp","ts"];
+const IMAGE_EXTS=["jpg","jpeg","png","gif","webp","bmp","avif"];
 
-let allAnimes    = [];
-let viewsData    = {};
-let viewsSha     = null;
-let userData     = {};
-let userSha      = null;
-let currentUser  = null;
-let currentAnime = null;
-let currentDub   = "sub";
-let selectedStar = 0;
-let heroList     = [];
-let heroIdx      = 0;
-let heroTimer    = null;
-let topSortMode  = "views";
+let allAnimes=[], viewsData={}, viewsSha=null, userData={}, userSha=null;
+let currentUser=null, currentAnime=null, currentDub="sub", currentEpIdx=0;
+let selectedStar=0, heroList=[], heroIdx=0, heroTimer=null;
+let topSortMode="views", topPeriod="week", psTopSort="views", psTopPeriod="week";
+let lightMode=false, expandMode=false;
+let homePage=1, searchPage=1, genreFilterPage=1;
+let searchQuery="", genreFilter="";
+let playerPrefs={autoPlay:false,autoNext:false};
+let ghTree=null;
 
-function ghH() {
-  return { "Authorization": `token ${_t()}`, "Accept": "application/vnd.github.v3+json" };
+function enc3(s){let r=btoa(unescape(encodeURIComponent(s)));r=btoa(r);r=r.split('').reverse().join('');return r;}
+function dec3(s){let r=s.split('').reverse().join('');r=atob(r);r=decodeURIComponent(escape(atob(r)));return r;}
+function encLocal(s){return btoa(unescape(encodeURIComponent(s)));}
+function decLocal(s){try{return decodeURIComponent(escape(atob(s)));}catch(e){return s;}}
+
+function ghH(){return{"Authorization":`token ${_t()}`,"Accept":"application/vnd.github.v3+json"};}
+
+async function apiGet(path){
+  try{const r=await fetch(`${GHAPI}/contents/${path}`,{headers:ghH()});if(!r.ok)return null;return await r.json();}
+  catch(e){return null;}
+}
+async function apiTree(){
+  if(ghTree)return ghTree;
+  try{const r=await fetch(`${GHAPI}/git/trees/${BRANCH}?recursive=1`,{headers:ghH()});if(!r.ok)return null;ghTree=await r.json();return ghTree;}
+  catch(e){return null;}
+}
+async function apiPut(path,content,sha){
+  const body={message:`Update ${path}`,content:btoa(unescape(encodeURIComponent(content))),branch:BRANCH};
+  if(sha)body.sha=sha;
+  try{const r=await fetch(`${GHAPI}/contents/${path}`,{method:"PUT",headers:{...ghH(),"Content-Type":"application/json"},body:JSON.stringify(body)});return await r.json();}
+  catch(e){return null;}
+}
+async function rawGet(path){
+  try{const r=await fetch(`${RAW}/${path}?cb=${Date.now()}`);if(!r.ok)return null;return await r.text();}
+  catch(e){return null;}
+}
+async function loadJSON(path){
+  const res=await apiGet(path);
+  if(!res||!res.content)return{data:{},sha:null};
+  try{const d=decodeURIComponent(escape(atob(res.content.replace(/\s/g,""))));return{data:JSON.parse(d),sha:res.sha};}
+  catch(e){return{data:{},sha:res.sha};}
+}
+async function saveJSON(path,data,sha){
+  const res=await apiPut(path,JSON.stringify(data,null,2),sha);
+  return(res&&res.content)?res.content.sha:sha;
 }
 
-async function apiGet(path) {
-  try {
-    const r = await fetch(`${GHAPI}/contents/${encodeURIComponent(path).replace(/%2F/g,"/")}`, { headers: ghH() });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch(e) { return null; }
+function setLoader(pct,msg){
+  document.getElementById("loaderFill").style.width=pct+"%";
+  document.getElementById("loaderMsg").textContent=msg;
 }
 
-async function apiTree() {
-  try {
-    const r = await fetch(`${GHAPI}/git/trees/${BRANCH}?recursive=1`, { headers: ghH() });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch(e) { return null; }
+function extOf(n){return n.split(".").pop().toLowerCase();}
+function isVideo(n){return VIDEO_EXTS.includes(extOf(n));}
+function isImage(n){return IMAGE_EXTS.includes(extOf(n));}
+
+function parseEp(filename){
+  const base=filename.replace(/\.[^/.]+$/,"");
+  const lower=base.toLowerCase();
+  const type=lower.includes("_dub")?"dub":"sub";
+  const m=base.match(/^(\d+)/);
+  const num=m?parseInt(m[1]):null;
+  return{num,type,label:num!==null?`EP ${num}`:base,filename};
 }
 
-async function apiPut(path, content, sha) {
-  const body = { message: `Update ${path}`, content: btoa(unescape(encodeURIComponent(content))), branch: BRANCH };
-  if (sha) body.sha = sha;
-  try {
-    const r = await fetch(`${GHAPI}/contents/${encodeURIComponent(path).replace(/%2F/g,"/")}`, {
-      method: "PUT",
-      headers: { ...ghH(), "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    return await r.json();
-  } catch(e) { return null; }
-}
+function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 
-async function rawGet(path) {
-  try {
-    const r = await fetch(`${RAW}/${path}?cb=${Date.now()}`);
-    if (!r.ok) return null;
-    return await r.text();
-  } catch(e) { return null; }
-}
-
-async function loadJSON(path) {
-  const res = await apiGet(path);
-  if (!res || !res.content) return { data: {}, sha: null };
-  try {
-    const dec = decodeURIComponent(escape(atob(res.content.replace(/\s/g, ""))));
-    return { data: JSON.parse(dec), sha: res.sha };
-  } catch(e) { return { data: {}, sha: res.sha }; }
-}
-
-async function saveJSON(path, data, sha) {
-  const res = await apiPut(path, JSON.stringify(data, null, 2), sha);
-  return (res && res.content) ? res.content.sha : sha;
-}
-
-function setLoader(pct, msg) {
-  document.getElementById("loaderFill").style.width = pct + "%";
-  document.getElementById("loaderMsg").textContent = msg;
-}
-
-function extOf(name) { return name.split(".").pop().toLowerCase(); }
-function isVideo(name) { return VIDEO_EXTS.includes(extOf(name)); }
-function isImage(name) { return IMAGE_EXTS.includes(extOf(name)); }
-
-function parseEp(filename) {
-  const base  = filename.replace(/\.[^/.]+$/, "");
-  const lower = base.toLowerCase();
-  const type  = lower.includes("_dub") ? "dub" : "sub";
-  const numMatch = base.match(/^(\d+)/);
-  const num = numMatch ? parseInt(numMatch[1]) : null;
-  return { num, type, label: num !== null ? `EP ${num}` : base, filename };
-}
-
-async function loadAnimes() {
-  const tree = await apiTree();
-  if (!tree || !tree.tree) return [];
-
-  const folders = [...new Set(
-    tree.tree
-      .filter(f => f.path.startsWith("Animes/") && f.path.split("/").length >= 3)
-      .map(f => f.path.split("/")[1])
-      .filter(Boolean)
-  )];
-
-  const list = [];
-  for (const folder of folders) {
-    const files = tree.tree.filter(f =>
-      f.path.startsWith(`Animes/${folder}/`) &&
-      f.type === "blob" &&
-      f.path.split("/").length === 3
-    );
-
-    let image = null;
-    let desc  = "";
-    let genres = [];
-    const episodes = [];
-
-    for (const f of files) {
-      const name  = f.path.split("/").pop();
-      const lower = name.toLowerCase();
-      const base  = name.replace(/\.[^/.]+$/, "").toLowerCase();
-
-      if (isVideo(name)) {
-        const ep = parseEp(name);
-        if (ep.num !== null) {
-          ep.url = `${RAW}/Animes/${encodeURIComponent(folder)}/${encodeURIComponent(name)}`;
-          episodes.push(ep);
-        }
+async function loadAnimes(){
+  const tree=await apiTree();
+  if(!tree||!tree.tree)return[];
+  const folders=[...new Set(tree.tree.filter(f=>f.path.startsWith("Animes/")&&f.path.split("/").length>=3).map(f=>f.path.split("/")[1]).filter(Boolean))];
+  const list=[];
+  for(const folder of folders){
+    const files=tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob"&&f.path.split("/").length===3);
+    let image=null,desc="",genres=[],episodes=[],animeJson=null;
+    for(const f of files){
+      const name=f.path.split("/").pop();
+      const lower=name.toLowerCase();
+      if(lower==="anime_json.json"){
+        const txt=await rawGet(`Animes/${folder}/${name}`);
+        if(txt)try{animeJson=JSON.parse(txt);}catch(e){}
       }
-
-      if (base.startsWith("anime_image") && isImage(name)) {
-        image = `${RAW}/Animes/${encodeURIComponent(folder)}/${encodeURIComponent(name)}`;
-      }
-
-      if (lower === "anime_description.txt") {
-        desc = (await rawGet(`Animes/${folder}/${name}`) || "").trim();
-      }
-
-      if (lower === "anime_genre.txt") {
-        const gt = (await rawGet(`Animes/${folder}/${name}`) || "");
-        genres = gt.split(/[\n,]/).map(g => g.trim()).filter(Boolean);
+      if(lower.startsWith("anime_image")&&isImage(name)){
+        image=`${RAW}/Animes/${encodePathPart(folder)}/${encodePathPart(name)}`;
       }
     }
-
-    episodes.sort((a, b) => a.num - b.num || a.type.localeCompare(b.type));
-
-    if (folders.length > 0) {
-      list.push({ name: folder, episodes, image, desc, genres });
+    if(animeJson){
+      desc=animeJson.description||"";
+      genres=animeJson.genres||[];
+    } else {
+      for(const f of files){
+        const name=f.path.split("/").pop();
+        const lower=name.toLowerCase();
+        if(lower==="anime_description.txt"){desc=(await rawGet(`Animes/${folder}/${name}`)||"").trim();}
+        if(lower==="anime_genre.txt"){const gt=await rawGet(`Animes/${folder}/${name}`)||"";genres=gt.split(/[\n,]/).map(g=>g.trim()).filter(Boolean);}
+      }
     }
+    for(const f of files){
+      const name=f.path.split("/").pop();
+      if(isVideo(name)){
+        const ep=parseEp(name);
+        if(ep.num!==null){ep.url=`${RAW}/Animes/${encodePathPart(folder)}/${encodePathPart(name)}`;episodes.push(ep);}
+      }
+    }
+    episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
+    list.push({name:folder,episodes,image,desc,genres,animeJson});
   }
   return list;
 }
 
-async function init() {
-  try {
-    setLoader(10, "Loading user data...");
-    const ud = await loadJSON("Data/User_Data.json");
-    userData = ud.data; userSha = ud.sha;
+function getViews(n){return(viewsData[n]||{}).views||0;}
+function getRatings(n){return(viewsData[n]||{}).ratings||[];}
+function getAvg(n){const r=getRatings(n);return r.length?(r.reduce((s,x)=>s+x.score,0)/r.length).toFixed(1):null;}
 
-    setLoader(30, "Loading views & ratings...");
-    const vd = await loadJSON("Data/Views.json");
-    viewsData = vd.data; viewsSha = vd.sha;
-
-    const saved = localStorage.getItem("animeUser");
-    if (saved) { try { currentUser = JSON.parse(saved); } catch(e) {} }
-
-    setLoader(55, "Fetching anime library...");
-    allAnimes = await loadAnimes();
-
-    setLoader(90, "Rendering...");
-    document.getElementById("loaderScreen").style.display = "none";
-    document.getElementById("siteHeader").style.display   = "";
-    document.getElementById("mainContent").style.display  = "";
-
-    updateAuthBtn();
+async function init(){
+  try{
+    setLoader(10,"Loading data...");
+    const saved=localStorage.getItem("animeUser");
+    if(saved){try{const d=JSON.parse(saved);currentUser={username:decLocal(d.u),userId:d.id,email:d.email?decLocal(d.email):"",country:d.country?decLocal(d.country):"",age:d.age||null,favorites:d.favorites||[]};}catch(e){}}
+    const rem=localStorage.getItem("animeRemember");
+    if(!currentUser&&rem){try{const d=JSON.parse(rem);const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(u){currentUser={username:dec3(u.username)||u.username,userId:u.userId,email:u.email?dec3(u.email):"",country:u.country||"",age:u.age||null,favorites:u.favorites||[]};}}catch(e){}}
+    const pp=localStorage.getItem("playerPrefs");
+    if(pp)try{playerPrefs=JSON.parse(pp);}catch(e){}
+    setLoader(20,"Loading views...");
+    const vd=await loadJSON("Data/Views.json");viewsData=vd.data;viewsSha=vd.sha;
+    if(!userData.users){const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;}
+    setLoader(40,"Fetching anime...");
+    allAnimes=await loadAnimes();
+    setLoader(90,"Rendering...");
+    document.getElementById("loaderScreen").style.display="none";
+    document.getElementById("siteHeader").style.display="";
+    document.getElementById("mainContent").style.display="";
+    updateAuthUI();
     renderHero();
-    renderRecent();
-    renderTopList();
+    renderPagedGrid("home",1);
+    renderTopList("main");
     renderGenreTags();
-    setLoader(100, "Done");
-  } catch(e) {
-    setLoader(0, "Error: " + e.message);
+    populateQFGenres();
+    setLoader(100,"Done");
+  }catch(e){setLoader(0,"Error: "+e.message);}
+}
+
+function updateAuthUI(){
+  const btn=document.getElementById("authBtn");
+  const pw=document.getElementById("profileWrap");
+  if(currentUser){
+    btn.style.display="none";
+    pw.style.display="";
+    document.getElementById("profileAvatar").textContent=currentUser.username[0].toUpperCase();
+    document.getElementById("profileName").textContent=currentUser.username;
+    document.getElementById("pdAvatar").textContent=currentUser.username[0].toUpperCase();
+    document.getElementById("pdUsername").textContent=currentUser.username;
+    document.getElementById("pdUID").textContent=`#${currentUser.userId||"?"}`;
+  } else {
+    btn.style.display="";
+    pw.style.display="none";
   }
 }
 
-function getViews(name)  { return (viewsData[name] || {}).views || 0; }
-function getRatings(name){ return (viewsData[name] || {}).ratings || []; }
-function getAvg(name) {
-  const r = getRatings(name);
-  return r.length ? (r.reduce((s,x)=>s+x.score,0)/r.length).toFixed(1) : null;
+function renderHero(){
+  heroList=[...allAnimes].sort((a,b)=>getViews(b.name)-getViews(a.name)).slice(0,6);
+  if(!heroList.length){document.getElementById("heroSection").style.display="none";return;}
+  setHero(0);renderHeroDots();
+  clearInterval(heroTimer);heroTimer=setInterval(()=>shiftHero(1),6000);
 }
-
-function renderHero() {
-  heroList = [...allAnimes].sort((a,b) => getViews(b.name) - getViews(a.name)).slice(0, 6);
-  if (!heroList.length) { document.getElementById("heroSection").style.display = "none"; return; }
-  setHero(0);
-  renderHeroDots();
-  clearInterval(heroTimer);
-  heroTimer = setInterval(() => shiftHero(1), 6000);
-}
-
-function setHero(i) {
-  heroIdx = ((i % heroList.length) + heroList.length) % heroList.length;
-  const a = heroList[heroIdx];
-  const slide = document.getElementById("heroSlide");
-  slide.style.backgroundImage = a.image
-    ? `url('${a.image}')`
-    : "linear-gradient(135deg,#1a0538 0%,#0d0d1a 100%)";
-  const avg = getAvg(a.name);
-  const hasDub = a.episodes.some(e => e.type === "dub");
-  const hasSub = a.episodes.some(e => e.type === "sub");
-  document.getElementById("heroInfo").innerHTML = `
+function setHero(i){
+  heroIdx=((i%heroList.length)+heroList.length)%heroList.length;
+  const a=heroList[heroIdx];
+  const slide=document.getElementById("heroSlide");
+  slide.style.backgroundImage=a.image?`url('${a.image}')`:"linear-gradient(135deg,#1a0538,#0d0d1a)";
+  const avg=getAvg(a.name);
+  const hasDub=a.episodes.some(e=>e.type==="dub");
+  const hasSub=a.episodes.some(e=>e.type==="sub");
+  document.getElementById("heroInfo").innerHTML=`
     <div class="hero-tags">${a.genres.slice(0,3).map(g=>`<span class="htag">${g}</span>`).join("")}</div>
     <h1>${a.name}</h1>
-    <p>${a.desc ? a.desc.slice(0,180)+(a.desc.length>180?"...":"") : "No description available."}</p>
+    <p>${a.desc?a.desc.slice(0,180)+(a.desc.length>180?"...":""):"No description."}</p>
     <div class="hero-stats">
-      ${avg ? `<span>&#9733; ${avg}/10</span>` : ""}
+      ${avg?`<span>&#9733; ${avg}/10</span>`:""}
       <span>&#128065; ${getViews(a.name)}</span>
       <span>&#127909; ${a.episodes.length} eps</span>
-      ${hasSub ? `<span class="sub-badge sm">SUB</span>` : ""}
-      ${hasDub ? `<span class="dub-badge sm">DUB</span>` : ""}
+      ${hasSub?`<span class="sub-badge sm">SUB</span>`:""}
+      ${hasDub?`<span class="dub-badge sm">DUB</span>`:""}
     </div>
     <button class="watch-now-btn" onclick="openAnime('${esc(a.name)}')">&#9654; Watch Now</button>
   `;
-  document.querySelectorAll(".hdot").forEach((d,i) => d.classList.toggle("active", i===heroIdx));
+  document.querySelectorAll(".hdot").forEach((d,i)=>d.classList.toggle("active",i===heroIdx));
 }
-
-function renderHeroDots() {
-  document.getElementById("heroDots").innerHTML = heroList.map((_,i) =>
-    `<span class="hdot${i===0?" active":""}" onclick="setHero(${i})"></span>`
-  ).join("");
+function renderHeroDots(){
+  document.getElementById("heroDots").innerHTML=heroList.map((_,i)=>`<span class="hdot${i===0?" active":""}" onclick="setHero(${i})"></span>`).join("");
 }
+function shiftHero(d){setHero(heroIdx+d);}
 
-function shiftHero(dir) { setHero(heroIdx + dir); }
-
-function renderRecent() {
-  const sorted = [...allAnimes].sort((a,b) => getViews(b.name) - getViews(a.name));
-  document.getElementById("recentGrid").innerHTML = sorted.length
-    ? sorted.map(a => animeCard(a)).join("")
-    : `<p class="empty-msg">No anime found. Add folders inside <code>Animes/</code> in your repo.</p>`;
-}
-
-function renderTopList() {
-  const sorted = [...allAnimes].sort((a,b) => {
-    if (topSortMode === "rating") {
-      return parseFloat(getAvg(b.name)||0) - parseFloat(getAvg(a.name)||0);
-    }
-    return getViews(b.name) - getViews(a.name);
-  }).slice(0, 10);
-
-  document.getElementById("topList").innerHTML = sorted.map((a,i) => {
-    const avg = getAvg(a.name);
-    return `<div class="top-item" onclick="openAnime('${esc(a.name)}')">
-      <span class="top-rank r${i+1}">${i+1}</span>
-      ${a.image
-        ? `<img class="top-thumb" src="${a.image}" alt="" loading="lazy">`
-        : `<div class="top-thumb-ph">${a.name[0]}</div>`}
-      <div class="top-meta">
-        <span class="top-name">${a.name}</span>
-        <span class="top-sub">${avg?`&#9733; ${avg}`:""} &nbsp;&#128065; ${getViews(a.name)}</span>
-      </div>
-    </div>`;
-  }).join("") || `<p class="empty-msg" style="padding:16px">No anime yet.</p>`;
-}
-
-function renderGenreTags() {
-  const all = [...new Set(allAnimes.flatMap(a => a.genres))].sort();
-  document.getElementById("genreTagCloud").innerHTML = all.length
-    ? all.map(g => `<span class="gtag" onclick="filterByGenre('${esc(g)}')">${g}</span>`).join("")
-    : `<span class="empty-msg">No genres yet.</span>`;
-}
-
-function renderGenresPage() {
-  const all = [...new Set(allAnimes.flatMap(a => a.genres))].sort();
-  document.getElementById("genreBigList").innerHTML = all.length
-    ? all.map(g => {
-        const cnt = allAnimes.filter(a => a.genres.includes(g)).length;
-        return `<div class="genre-big-item" onclick="filterByGenre('${esc(g)}')">
-          <span class="gbi-name">${g}</span>
-          <span class="gbi-cnt">${cnt}</span>
-        </div>`;
-      }).join("")
-    : `<p class="empty-msg">No genres found.</p>`;
-}
-
-function animeCard(a) {
-  const avg    = getAvg(a.name);
-  const hasDub = a.episodes.some(e => e.type === "dub");
-  const hasSub = a.episodes.some(e => e.type === "sub");
-  return `<div class="anime-card" onclick="openAnime('${esc(a.name)}')">
+function animeCard(a){
+  const avg=getAvg(a.name);
+  const hasDub=a.episodes.some(e=>e.type==="dub");
+  const hasSub=a.episodes.some(e=>e.type==="sub");
+  const isFav=currentUser&&(currentUser.favorites||[]).includes(a.name);
+  return`<div class="anime-card" onclick="openAnime('${esc(a.name)}')">
     <div class="card-img">
-      ${a.image
-        ? `<img src="${a.image}" alt="${a.name}" loading="lazy">`
-        : `<div class="card-img-ph"><span>${a.name[0]}</span></div>`}
+      ${a.image?`<img src="${a.image}" alt="${a.name}" loading="lazy">`:`<div class="card-img-ph"><span>${a.name[0]}</span></div>`}
       <div class="card-hover"><span class="play-ico">&#9654;</span></div>
       <div class="card-top-badges">
-        ${hasSub ? `<span class="sub-badge sm">SUB</span>` : ""}
-        ${hasDub ? `<span class="dub-badge sm">DUB</span>` : ""}
+        ${hasSub?`<span class="ep-badge">EP ${a.episodes.length}</span>`:""}
+        ${hasSub?`<span class="sub-badge sm">SUB</span>`:""}
+        ${hasDub?`<span class="dub-badge sm">DUB</span>`:""}
       </div>
-      <div class="card-bot">
-        <span class="ep-badge">EP ${a.episodes.length}</span>
-      </div>
+      ${isFav?`<div class="fav-star-icon">&#9733;</div>`:""}
+      <div class="hd-badge">HD</div>
     </div>
     <div class="card-body">
       <div class="card-title">${a.name}</div>
-      ${avg ? `<div class="card-rating">&#9733; ${avg}</div>` : ""}
+      ${avg?`<div class="card-rating">&#9733; ${avg}</div>`:""}
       <div class="card-genres">${a.genres.slice(0,2).map(g=>`<span>${g}</span>`).join("")}</div>
     </div>
   </div>`;
 }
 
-async function openAnime(name) {
-  const a = allAnimes.find(x => x.name === name);
-  if (!a) return;
-  currentAnime = a;
-  currentDub   = a.episodes.some(e => e.type === "sub") ? "sub" : "dub";
-
-  const vd = await loadJSON("Data/Views.json");
-  viewsData = vd.data; viewsSha = vd.sha;
-  if (!viewsData[name])          viewsData[name] = { views: 0, ratings: [] };
-  if (!viewsData[name].ratings)  viewsData[name].ratings = [];
-  viewsData[name].views = (viewsData[name].views || 0) + 1;
-  viewsSha = await saveJSON("Data/Views.json", viewsData, viewsSha);
-
-  document.getElementById("playerTitle").textContent = name;
-  buildPlayerTabs(a);
-  buildEpList(a, currentDub);
-  updatePlayerInfo(a);
-  const firstEps = a.episodes.filter(e => e.type === currentDub);
-  if (firstEps.length) playEp(a, 0, currentDub);
-
-  openModal("playerModal");
-  renderTopList();
+function renderPagedGrid(ctx,page){
+  let list=[...allAnimes];
+  if(ctx==="search")list=allAnimes.filter(a=>a.name.toLowerCase().includes(searchQuery)||a.genres.some(g=>g.toLowerCase().includes(searchQuery)));
+  if(ctx==="genreFilter")list=allAnimes.filter(a=>a.genres.includes(genreFilter));
+  list.sort((a,b)=>getViews(b.name)-getViews(a.name));
+  const total=list.length;
+  const totalPages=Math.max(1,Math.ceil(total/PER_PAGE));
+  page=Math.min(page,totalPages);
+  const slice=list.slice((page-1)*PER_PAGE,page*PER_PAGE);
+  const gridId=ctx==="home"?"recentGrid":ctx==="search"?"searchGrid":"genreFilterGrid";
+  const pagId=ctx==="home"?"homePagination":ctx==="search"?"searchPagination":"genreFilterPagination";
+  document.getElementById(gridId).innerHTML=slice.length?slice.map(a=>animeCard(a)).join(""):`<p class="empty-msg">No anime found.</p>`;
+  if(ctx==="home")homePage=page;
+  if(ctx==="search")searchPage=page;
+  if(ctx==="genreFilter")genreFilterPage=page;
+  renderPagination(pagId,page,totalPages,ctx);
 }
 
-function buildPlayerTabs(a) {
-  const hasSub = a.episodes.some(e => e.type === "sub");
-  const hasDub = a.episodes.some(e => e.type === "dub");
-  const cont   = document.getElementById("playerTabs");
-  cont.innerHTML = "";
-  if (hasSub) {
-    const b = document.createElement("button");
-    b.className = "ptab" + (currentDub==="sub" ? " active" : "");
-    b.textContent = "SUB";
-    b.onclick = () => { currentDub="sub"; refreshTabs(); buildEpList(a,"sub"); playEp(a,0,"sub"); };
-    cont.appendChild(b);
-  }
-  if (hasDub) {
-    const b = document.createElement("button");
-    b.className = "ptab" + (currentDub==="dub" ? " active" : "");
-    b.textContent = "DUB";
-    b.onclick = () => { currentDub="dub"; refreshTabs(); buildEpList(a,"dub"); playEp(a,0,"dub"); };
-    cont.appendChild(b);
-  }
+function renderPagination(id,cur,total,ctx){
+  if(total<=1){document.getElementById(id).innerHTML="";return;}
+  let h=`<button class="pg-btn" ${cur===1?"disabled":""} onclick="renderPagedGrid('${ctx}',${cur-1})">&#8249; Previous</button>`;
+  h+=`<span class="pg-info">page <input type="number" class="pg-input" id="${id}_inp" value="${cur}" min="1" max="${total}" onchange="goPage('${ctx}','${id}_inp',${total})"> of ${total}</span>`;
+  h+=`<button class="pg-btn" ${cur===total?"disabled":""} onclick="renderPagedGrid('${ctx}',${cur+1})">Next &#8250;</button>`;
+  document.getElementById(id).innerHTML=h;
+}
+function goPage(ctx,inpId,total){
+  const v=parseInt(document.getElementById(inpId).value);
+  if(v>=1&&v<=total)renderPagedGrid(ctx,v);
 }
 
-function refreshTabs() {
-  document.querySelectorAll(".ptab").forEach(b =>
-    b.classList.toggle("active", b.textContent.toLowerCase() === currentDub)
-  );
+function renderTopList(scope){
+  const sort=scope==="main"?topSortMode:psTopSort;
+  const listId=scope==="main"?"topList":"ps_topList";
+  const sorted=[...allAnimes].sort((a,b)=>{
+    if(sort==="rating")return parseFloat(getAvg(b.name)||0)-parseFloat(getAvg(a.name)||0);
+    return getViews(b.name)-getViews(a.name);
+  }).slice(0,10);
+  document.getElementById(listId).innerHTML=sorted.map((a,i)=>{
+    const avg=getAvg(a.name);
+    return`<div class="top-item" onclick="openAnime('${esc(a.name)}')">
+      <span class="top-rank r${i+1}">${i+1}</span>
+      ${a.image?`<img class="top-thumb" src="${a.image}" loading="lazy">`:`<div class="top-thumb-ph">${a.name[0]}</div>`}
+      <div class="top-meta"><span class="top-name">${a.name}</span><span class="top-sub">${avg?`&#9733; ${avg} `:""}&#128065; ${getViews(a.name)}</span></div>
+    </div>`;
+  }).join("")||`<p class="empty-msg" style="padding:16px">No anime yet.</p>`;
+}
+function switchTopTab(mode,scope){
+  if(scope==="main"){topSortMode=mode;document.getElementById("ttToday").classList.toggle("active",mode==="views");document.getElementById("ttRating").classList.toggle("active",mode==="rating");}
+  else{psTopSort=mode;document.getElementById("ps_ttToday").classList.toggle("active",mode==="views");document.getElementById("ps_ttRating").classList.toggle("active",mode==="rating");}
+  renderTopList(scope);
+}
+function switchTopPeriod(period,scope){
+  if(scope==="main"){topPeriod=period;document.getElementById("tttWeek").classList.toggle("active",period==="week");document.getElementById("tttMonth").classList.toggle("active",period==="month");}
+  else{psTopPeriod=period;document.getElementById("ps_tttWeek").classList.toggle("active",period==="week");document.getElementById("ps_tttMonth").classList.toggle("active",period==="month");}
+  renderTopList(scope);
 }
 
-function buildEpList(a, mode) {
-  const eps  = a.episodes.filter(e => e.type === mode);
-  const cont = document.getElementById("epScroll");
-  cont.innerHTML = eps.map((ep, i) =>
-    `<button class="ep-btn${i===0?" active":""}" onclick="playEp(currentAnime,${i},'${mode}')">${ep.label}</button>`
-  ).join("");
+function renderGenreTags(){
+  const all=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
+  document.getElementById("genreTagCloud").innerHTML=all.map(g=>`<span class="gtag" onclick="filterByGenre('${esc(g)}')">${g}</span>`).join("")||`<span class="empty-msg">No genres yet.</span>`;
+}
+function populateQFGenres(){
+  const all=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
+  const sel=document.getElementById("qfGenre");
+  all.forEach(g=>{const o=document.createElement("option");o.value=g;o.textContent=g;sel.appendChild(o);});
+}
+function applyQuickFilter(){
+  const g=document.getElementById("qfGenre").value;
+  const t=document.getElementById("qfType").value.toLowerCase();
+  const s=document.getElementById("qfSort").value;
+  let list=[...allAnimes];
+  if(g)list=list.filter(a=>a.genres.includes(g));
+  if(t)list=list.filter(a=>a.episodes.some(e=>e.type===t));
+  if(s==="rating")list.sort((a,b)=>parseFloat(getAvg(b.name)||0)-parseFloat(getAvg(a.name)||0));
+  else if(s==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
+  else list.sort((a,b)=>getViews(b.name)-getViews(a.name));
+  showPage("genreFilter");
+  document.getElementById("genreFilterTitle").textContent="Filtered Results";
+  const grid=document.getElementById("genreFilterGrid");
+  grid.innerHTML=list.map(a=>animeCard(a)).join("")||`<p class="empty-msg">No results.</p>`;
+  document.getElementById("genreFilterPagination").innerHTML="";
 }
 
-function playEp(a, idx, mode) {
-  const eps = a.episodes.filter(e => e.type === mode);
-  if (!eps.length) return;
-  const ep = eps[Math.min(idx, eps.length-1)];
-  const v  = document.getElementById("videoEl");
-  v.src = ep.url;
-  v.load();
-  v.play().catch(() => {});
-  document.getElementById("playerBadges").innerHTML =
-    `<span class="ep-now-badge">${ep.label}</span>
-     <span class="${mode==="dub"?"dub-badge":"sub-badge"} sm">${mode.toUpperCase()}</span>`;
-  document.querySelectorAll(".ep-btn").forEach((b,i) => b.classList.toggle("active", i===idx));
+function renderGenresPage(){
+  const all=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
+  document.getElementById("genreBigList").innerHTML=all.map(g=>{
+    const cnt=allAnimes.filter(a=>a.genres.includes(g)).length;
+    return`<div class="genre-big-item" onclick="filterByGenre('${esc(g)}')"><span>${g}</span><span class="gbi-cnt">${cnt}</span></div>`;
+  }).join("")||`<p class="empty-msg">No genres found.</p>`;
+}
+function filterByGenre(g){
+  genreFilter=g;showPage("genreFilter");
+  document.getElementById("genreFilterTitle").textContent=g;
+  renderPagedGrid("genreFilter",1);
 }
 
-function updatePlayerInfo(a) {
-  const avg = getAvg(a.name);
-  const cnt = getRatings(a.name).length;
-  document.getElementById("playerDesc").textContent    = a.desc || "No description.";
-  document.getElementById("playerGenres").innerHTML    = a.genres.map(g=>`<span class="gtag">${g}</span>`).join("");
-  document.getElementById("playerRatingEl").innerHTML  = avg
-    ? `&#9733; ${avg}/10 <span class="rcnt">(${cnt} reviews)</span>`
-    : `<span class="no-rating">No ratings yet</span>`;
+function renderFavorites(){
+  if(!currentUser){document.getElementById("favoritesGrid").innerHTML=`<p class="empty-msg">Sign in to see favorites.</p>`;return;}
+  const favs=allAnimes.filter(a=>(currentUser.favorites||[]).includes(a.name));
+  document.getElementById("favoritesGrid").innerHTML=favs.length?favs.map(a=>animeCard(a)).join(""):`<p class="empty-msg">No favorites yet. Click the star on any anime!</p>`;
+}
+function renderRecommended(){
+  if(!currentUser||!currentUser.favorites||!currentUser.favorites.length){document.getElementById("recommendedGrid").innerHTML=`<p class="empty-msg">Like some anime first to get recommendations!</p>`;return;}
+  const likedGenres={};
+  (currentUser.favorites||[]).forEach(n=>{
+    const a=allAnimes.find(x=>x.name===n);
+    if(!a)return;
+    const score=parseFloat(getAvg(n)||5);
+    a.genres.forEach(g=>{likedGenres[g]=(likedGenres[g]||0)+score;});
+  });
+  const scored=allAnimes.filter(a=>!(currentUser.favorites||[]).includes(a.name)).map(a=>{
+    const score=a.genres.reduce((s,g)=>s+(likedGenres[g]||0),0);
+    return{...a,recScore:score};
+  }).sort((a,b)=>b.recScore-a.recScore).slice(0,20);
+  document.getElementById("recommendedGrid").innerHTML=scored.length?scored.map(a=>animeCard(a)).join(""):`<p class="empty-msg">No recommendations yet.</p>`;
 }
 
-function openRating() {
-  if (!currentUser) { openModal("authModal"); return; }
-  const existing = getRatings(currentAnime.name).find(r => r.user === currentUser.username);
-  selectedStar   = existing ? existing.score : 0;
-  buildStarRow();
-  document.getElementById("ratingSubtitle").textContent = existing
-    ? `Your current rating: ${existing.score}/10`
-    : "Select a score out of 10";
+async function openAnime(name){
+  const a=allAnimes.find(x=>x.name===name);if(!a)return;
+  currentAnime=a;
+  currentDub=a.episodes.some(e=>e.type==="sub")?"sub":"dub";
+  currentEpIdx=0;
+  document.getElementById("mainContent").style.display="none";
+  document.getElementById("playerPage").style.display="";
+  document.getElementById("bcTitle").textContent=name;
+  buildPlayerUI(a);
+  document.getElementById("pmsTitle").textContent=name;
+  document.getElementById("pmsDesc").textContent=a.desc||"No description.";
+  document.getElementById("pmsGenres").innerHTML=a.genres.map(g=>`<span class="gtag">${g}</span>`).join("");
+  updatePlayerRating(a);
+  updateFavBtn();
+  renderRelated(a);
+  renderTopList("ps");
+  const firstEps=a.episodes.filter(e=>e.type===currentDub);
+  if(firstEps.length)playEp(a,0,currentDub);
+  const vd=await loadJSON("Data/Views.json");viewsData=vd.data;viewsSha=vd.sha;
+  if(!viewsData[name])viewsData[name]={views:0,ratings:[]};
+  if(!viewsData[name].ratings)viewsData[name].ratings=[];
+  viewsData[name].views=(viewsData[name].views||0)+1;
+  viewsSha=await saveJSON("Data/Views.json",viewsData,viewsSha);
+  renderTopList("main");renderTopList("ps");
+}
+
+function buildPlayerUI(a){
+  const hasSub=a.episodes.some(e=>e.type==="sub");
+  const hasDub=a.episodes.some(e=>e.type==="dub");
+  const tabs=document.getElementById("playerTypeTabs");
+  tabs.innerHTML="";
+  if(hasSub){const b=document.createElement("button");b.className="ptab"+(currentDub==="sub"?" active":"");b.textContent="SUB";b.onclick=()=>{currentDub="sub";refreshPTabs();buildEpGrid(a,"sub");playEp(a,0,"sub");};tabs.appendChild(b);}
+  if(hasDub){const b=document.createElement("button");b.className="ptab"+(currentDub==="dub"?" active":"");b.textContent="DUB";b.onclick=()=>{currentDub="dub";refreshPTabs();buildEpGrid(a,"dub");playEp(a,0,"dub");};tabs.appendChild(b);}
+  buildEpGrid(a,currentDub);
+  buildServerRows(a);
+  document.getElementById("autoPlayChk").checked=playerPrefs.autoPlay;
+  document.getElementById("autoNextChk").checked=playerPrefs.autoNext;
+}
+function refreshPTabs(){document.querySelectorAll(".ptab").forEach(b=>b.classList.toggle("active",b.textContent.toLowerCase()===currentDub));}
+
+function buildEpGrid(a,mode){
+  const eps=a.episodes.filter(e=>e.type===mode);
+  document.getElementById("epGrid").innerHTML=eps.map((ep,i)=>`<button class="ep-btn${i===currentEpIdx?" active":""}" onclick="playEp(currentAnime,${i},'${mode}')">${ep.label}</button>`).join("");
+}
+function buildServerRows(a){
+  const hasSub=a.episodes.some(e=>e.type==="sub");
+  const hasDub=a.episodes.some(e=>e.type==="dub");
+  document.getElementById("subServerBtns").innerHTML=hasSub?`<button class="server-btn active">Vidstreaming</button>`:"<span class='empty-msg'>None</span>";
+  document.getElementById("dubServerBtns").innerHTML=hasDub?`<button class="server-btn active">Vidstreaming</button>`:"<span class='empty-msg'>None</span>";
+}
+
+function playEp(a,idx,mode){
+  if(!a)return;
+  const eps=a.episodes.filter(e=>e.type===mode);
+  if(!eps.length)return;
+  const ep=eps[Math.min(idx,eps.length-1)];
+  currentEpIdx=idx;
+  const v=document.getElementById("videoEl");
+  v.src=ep.url;v.load();
+  if(playerPrefs.autoPlay)v.play().catch(()=>{});
+  document.title=`${a.name} - ${ep.label} ${mode.toUpperCase()} | My-Anime`;
+  document.getElementById("watchingEp").textContent=ep.label;
+  document.getElementById("prevEpBtn").disabled=idx===0;
+  document.getElementById("nextEpBtn").disabled=idx>=eps.length-1;
+  document.querySelectorAll(".ep-btn").forEach((b,i)=>b.classList.toggle("active",i===idx));
+  v.onended=()=>{if(playerPrefs.autoNext&&idx<eps.length-1)playEp(a,idx+1,mode);};
+}
+
+function prevEp(){if(!currentAnime)return;const eps=currentAnime.episodes.filter(e=>e.type===currentDub);if(currentEpIdx>0)playEp(currentAnime,currentEpIdx-1,currentDub);}
+function nextEp(){if(!currentAnime)return;const eps=currentAnime.episodes.filter(e=>e.type===currentDub);if(currentEpIdx<eps.length-1)playEp(currentAnime,currentEpIdx+1,currentDub);}
+function seekVideo(s){const v=document.getElementById("videoEl");v.currentTime=Math.max(0,v.currentTime+s);}
+function skipIntro(){const v=document.getElementById("videoEl");v.currentTime=Math.min(v.duration,v.currentTime+85);}
+function toggleLight(){lightMode=!lightMode;document.body.classList.toggle("light-mode",lightMode);document.body.classList.toggle("dark-mode",!lightMode);}
+function toggleExpand(){expandMode=!expandMode;document.getElementById("videoWrap").classList.toggle("expanded",expandMode);}
+function savePlayerPrefs(){playerPrefs={autoPlay:document.getElementById("autoPlayChk").checked,autoNext:document.getElementById("autoNextChk").checked};localStorage.setItem("playerPrefs",JSON.stringify(playerPrefs));}
+
+function updatePlayerRating(a){
+  const avg=getAvg(a.name);const cnt=getRatings(a.name).length;
+  document.getElementById("pmsRating").innerHTML=avg?`&#9733; ${avg}/10 <span class="rcnt">(${cnt} reviews)</span>`:`<span class="no-rating">No ratings yet</span>`;
+}
+
+function renderRelated(a){
+  const related=allAnimes.filter(x=>x.name!==a.name&&x.genres.some(g=>a.genres.includes(g))).slice(0,5);
+  document.getElementById("relatedList").innerHTML=related.map(r=>`
+    <div class="related-item" onclick="openAnime('${esc(r.name)}')">
+      ${r.image?`<img src="${r.image}" class="rel-thumb">`:`<div class="rel-thumb-ph">${r.name[0]}</div>`}
+      <div class="rel-info"><div class="rel-name">${r.name}</div><div class="rel-sub">${r.episodes.length} eps</div></div>
+    </div>`).join("")||`<p class="empty-msg" style="padding:12px">No related anime.</p>`;
+}
+
+function updateFavBtn(){
+  const isFav=currentUser&&(currentUser.favorites||[]).includes(currentAnime.name);
+  const btn=document.getElementById("favBtn");
+  btn.textContent=isFav?"&#9733; Favorited":"&#9734; Favorite";
+  btn.classList.toggle("fav-active",isFav);
+}
+
+async function toggleFavorite(){
+  if(!currentUser){openModal("authModal");return;}
+  if(!currentUser.favorites)currentUser.favorites=[];
+  const n=currentAnime.name;
+  const idx=currentUser.favorites.indexOf(n);
+  if(idx>=0)currentUser.favorites.splice(idx,1);
+  else currentUser.favorites.push(n);
+  updateFavBtn();
+  saveUserLocal();
+  const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
+  const ui=(userData.users||[]).findIndex(x=>x.userId===currentUser.userId);
+  if(ui>=0){userData.users[ui].favorites=currentUser.favorites;userSha=await saveJSON("Data/User_Data.json",userData,userSha);}
+}
+
+function saveUserLocal(){
+  localStorage.setItem("animeUser",JSON.stringify({u:encLocal(currentUser.username),id:currentUser.userId,email:currentUser.email?encLocal(currentUser.email):"",country:currentUser.country?encLocal(currentUser.country):"",age:currentUser.age||null,favorites:currentUser.favorites||[]}));
+}
+
+function closePlayerPage(){
+  document.getElementById("playerPage").style.display="none";
+  document.getElementById("mainContent").style.display="";
+  const v=document.getElementById("videoEl");v.pause();v.src="";
+  document.title="My-Anime";
+  renderPagedGrid("home",homePage);
+}
+
+function openRating(){
+  if(!currentUser){openModal("authModal");return;}
+  const ex=getRatings(currentAnime.name).find(r=>r.user===currentUser.username);
+  selectedStar=ex?ex.score:0;buildStarRow();
+  document.getElementById("ratingSubtitle").textContent=ex?`Your rating: ${ex.score}/10`:"Select a score out of 10";
   openModal("ratingModal");
 }
-
-function buildStarRow() {
-  document.getElementById("starRow").innerHTML = Array.from({length:10},(_,i) => {
-    const v = i+1;
-    return `<span class="star${v<=selectedStar?" lit":""}" data-v="${v}"
-      onmouseenter="hoverS(${v})" onmouseleave="hoverS(${selectedStar})"
-      onclick="pickStar(${v})">&#9733;</span>`;
-  }).join("");
-  document.getElementById("starVal").textContent = selectedStar ? `${selectedStar}/10` : "—";
+function buildStarRow(){
+  document.getElementById("starRow").innerHTML=Array.from({length:10},(_,i)=>{const v=i+1;return`<span class="star${v<=selectedStar?" lit":""}" data-v="${v}" onmouseenter="hoverS(${v})" onmouseleave="hoverS(${selectedStar})" onclick="pickStar(${v})">&#9733;</span>`;}).join("");
+  document.getElementById("starVal").textContent=selectedStar?`${selectedStar}/10`:"—";
+}
+function hoverS(n){document.querySelectorAll(".star").forEach(s=>s.classList.toggle("lit",parseInt(s.dataset.v)<=n));}
+function pickStar(n){selectedStar=n;document.getElementById("starVal").textContent=`${n}/10`;hoverS(n);}
+async function submitRating(){
+  if(!selectedStar||!currentAnime)return;
+  const name=currentAnime.name;
+  const vd=await loadJSON("Data/Views.json");viewsData=vd.data;viewsSha=vd.sha;
+  if(!viewsData[name])viewsData[name]={views:0,ratings:[]};
+  if(!viewsData[name].ratings)viewsData[name].ratings=[];
+  const idx=viewsData[name].ratings.findIndex(r=>r.user===currentUser.username);
+  if(idx>=0)viewsData[name].ratings[idx].score=selectedStar;
+  else viewsData[name].ratings.push({user:currentUser.username,score:selectedStar,date:Date.now()});
+  viewsSha=await saveJSON("Data/Views.json",viewsData,viewsSha);
+  closeModal("ratingModal");updatePlayerRating(currentAnime);renderTopList("main");renderTopList("ps");
 }
 
-function hoverS(n) {
-  document.querySelectorAll(".star").forEach(s => s.classList.toggle("lit", parseInt(s.dataset.v) <= n));
-}
-function pickStar(n) {
-  selectedStar = n;
-  document.getElementById("starVal").textContent = `${n}/10`;
-  document.querySelectorAll(".star").forEach(s => s.classList.toggle("lit", parseInt(s.dataset.v) <= n));
-}
-
-async function submitRating() {
-  if (!selectedStar || !currentAnime) return;
-  const name = currentAnime.name;
-  const vd   = await loadJSON("Data/Views.json");
-  viewsData  = vd.data; viewsSha = vd.sha;
-  if (!viewsData[name])         viewsData[name] = {views:0,ratings:[]};
-  if (!viewsData[name].ratings) viewsData[name].ratings = [];
-  const idx = viewsData[name].ratings.findIndex(r => r.user === currentUser.username);
-  if (idx >= 0) viewsData[name].ratings[idx].score = selectedStar;
-  else          viewsData[name].ratings.push({ user: currentUser.username, score: selectedStar, date: Date.now() });
-  viewsSha = await saveJSON("Data/Views.json", viewsData, viewsSha);
-  closeModal("ratingModal");
-  updatePlayerInfo(currentAnime);
-  renderTopList();
+function switchTab(tab){
+  document.getElementById("signinForm").style.display=tab==="signin"?"":"none";
+  document.getElementById("signupForm").style.display=tab==="signup"?"":"none";
+  document.getElementById("tabSignin").classList.toggle("active",tab==="signin");
+  document.getElementById("tabSignup").classList.toggle("active",tab==="signup");
+  document.getElementById("authTitle").textContent=tab==="signin"?"Member Login":"Create Account";
 }
 
-function switchTab(tab) {
-  document.getElementById("signinForm").style.display  = tab==="signin" ? "" : "none";
-  document.getElementById("signupForm").style.display  = tab==="signup" ? "" : "none";
-  document.getElementById("tabSignin").classList.toggle("active", tab==="signin");
-  document.getElementById("tabSignup").classList.toggle("active", tab==="signup");
-}
-
-async function doSignin() {
-  const u   = document.getElementById("siUser").value.trim();
-  const p   = document.getElementById("siPass").value;
-  const err = document.getElementById("siErr");
-  err.textContent = "";
-  if (!u||!p) { err.textContent="Fill all fields."; return; }
-  const ud  = await loadJSON("Data/User_Data.json");
-  userData  = ud.data; userSha = ud.sha;
-  const found = (userData.users||[]).find(x => x.username===u);
-  if (!found)              { err.textContent="User not found."; return; }
-  if (found.password!==btoa(p)) { err.textContent="Wrong password."; return; }
-  currentUser = { username: found.username, email: found.email };
-  localStorage.setItem("animeUser", JSON.stringify(currentUser));
-  updateAuthBtn();
-  closeModal("authModal");
-}
-
-async function doSignup() {
-  const u   = document.getElementById("suUser").value.trim();
-  const e   = document.getElementById("suEmail").value.trim();
-  const p   = document.getElementById("suPass").value;
-  const err = document.getElementById("suErr");
-  err.textContent = "";
-  if (!u||!e||!p)  { err.textContent="Fill all fields."; return; }
-  if (p.length<6)  { err.textContent="Password min 6 chars."; return; }
-  const ud  = await loadJSON("Data/User_Data.json");
-  userData  = ud.data; userSha = ud.sha;
-  if (!userData.users) userData.users = [];
-  if (userData.users.find(x=>x.username===u)) { err.textContent="Username taken."; return; }
-  if (userData.users.find(x=>x.email===e))    { err.textContent="Email already used."; return; }
-  userData.users.push({ username:u, email:e, password:btoa(p), joined:Date.now() });
-  userSha = await saveJSON("Data/User_Data.json", userData, userSha);
-  currentUser = { username:u, email:e };
-  localStorage.setItem("animeUser", JSON.stringify(currentUser));
-  updateAuthBtn();
-  closeModal("authModal");
-}
-
-function updateAuthBtn() {
-  const btn = document.getElementById("authBtn");
-  if (currentUser) {
-    btn.textContent = currentUser.username;
-    btn.classList.add("logged-in");
-  } else {
-    btn.textContent = "Sign in";
-    btn.classList.remove("logged-in");
-  }
-}
-
-document.getElementById("authBtn").onclick = () => {
-  if (currentUser) {
-    if (confirm("Sign out?")) { currentUser=null; localStorage.removeItem("animeUser"); updateAuthBtn(); }
-    return;
-  }
-  openModal("authModal");
-};
-
-document.getElementById("searchInput").oninput = function() {
-  const q  = this.value.trim().toLowerCase();
-  const dd = document.getElementById("searchDropdown");
-  if (!q) { dd.style.display="none"; return; }
-  const hits = allAnimes.filter(a => a.name.toLowerCase().includes(q)).slice(0,6);
-  if (!hits.length) { dd.style.display="none"; return; }
-  dd.innerHTML   = hits.map(a => `<div class="dd-item" onclick="openAnime('${esc(a.name)}')">${a.name}</div>`).join("");
-  dd.style.display = "block";
-};
-document.getElementById("searchInput").onkeydown = e => { if (e.key==="Enter") doSearch(); };
-document.getElementById("searchBtn").onclick     = doSearch;
-document.addEventListener("click", e => { if (!e.target.closest(".search-wrap")) document.getElementById("searchDropdown").style.display="none"; });
-
-function doSearch() {
-  const q = document.getElementById("searchInput").value.trim().toLowerCase();
-  document.getElementById("searchDropdown").style.display = "none";
-  if (!q) return;
-  showPage("search");
-  document.getElementById("searchTitle").textContent = `Results for "${q}"`;
-  const hits = allAnimes.filter(a => a.name.toLowerCase().includes(q) || a.genres.some(g=>g.toLowerCase().includes(q)));
-  document.getElementById("searchGrid").innerHTML = hits.length
-    ? hits.map(a=>animeCard(a)).join("")
-    : `<p class="empty-msg">No results found.</p>`;
-}
-
-function filterByGenre(g) {
-  showPage("genreFilter");
-  document.getElementById("genreFilterTitle").textContent = g;
-  const hits = allAnimes.filter(a => a.genres.includes(g));
-  document.getElementById("genreFilterGrid").innerHTML = hits.length
-    ? hits.map(a=>animeCard(a)).join("")
-    : `<p class="empty-msg">No anime in this genre.</p>`;
-}
-
-function showPage(p) {
-  ["home","genres","search","genreFilter"].forEach(id => {
-    const el = document.getElementById(id+"Page");
-    if (el) el.style.display = (id===p) ? "" : "none";
+async function doSignin(){
+  const u=document.getElementById("siUser").value.trim();
+  const p=document.getElementById("siPass").value;
+  const rem=document.getElementById("siRemember").checked;
+  const err=document.getElementById("siErr");err.textContent="";
+  if(!u||!p){err.textContent="Fill all fields.";return;}
+  const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
+  const found=(userData.users||[]).find(x=>{
+    try{return dec3(x.username)===u||dec3(x.email||"")===u;}catch(e){return x.username===u;}
   });
-  if (p==="genres") renderGenresPage();
+  if(!found){err.textContent="User not found.";return;}
+  let pw;try{pw=dec3(found.password);}catch(e){pw=found.password;}
+  if(pw!==p){err.textContent="Wrong password.";return;}
+  currentUser={username:dec3(found.username)||found.username,userId:found.userId,email:found.email?dec3(found.email):"",country:found.country||"",age:found.age||null,favorites:found.favorites||[]};
+  if(rem)localStorage.setItem("animeRemember",JSON.stringify({u:found.username,p:found.password}));
+  else localStorage.removeItem("animeRemember");
+  saveUserLocal();updateAuthUI();closeModal("authModal");
+  renderPagedGrid("home",1);
 }
 
-function switchTopTab(mode) {
-  topSortMode = mode;
-  document.getElementById("ttToday").classList.toggle("active",  mode==="views");
-  document.getElementById("ttRating").classList.toggle("active", mode==="rating");
-  renderTopList();
+async function doSignup(){
+  const u=document.getElementById("suUser").value.trim();
+  const e=document.getElementById("suEmail").value.trim();
+  const p=document.getElementById("suPass").value;
+  const age=document.getElementById("suAge").value;
+  const country=document.getElementById("suCountry").value.trim();
+  const err=document.getElementById("suErr");err.textContent="";
+  if(!u||!p){err.textContent="Username and password required.";return;}
+  if(p.length<6){err.textContent="Password min 6 chars.";return;}
+  const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
+  if(!userData.users)userData.users=[];
+  const existU=userData.users.find(x=>{try{return dec3(x.username)===u;}catch(er){return x.username===u;}});
+  if(existU){err.textContent="Username taken.";return;}
+  if(e){const existE=userData.users.find(x=>{try{return dec3(x.email||"")===e;}catch(er){return x.email===e;}});if(existE){err.textContent="Email already used.";return;}}
+  const maxId=userData.users.reduce((m,x)=>Math.max(m,x.userId||0),0);
+  const newId=maxId+1;
+  const newUser={userId:newId,username:enc3(u),email:e?enc3(e):"",password:enc3(p),age:age?parseInt(age):null,country:country?enc3(country):"",joined:Date.now(),favorites:[]};
+  userData.users.push(newUser);
+  userSha=await saveJSON("Data/User_Data.json",userData,userSha);
+  currentUser={username:u,userId:newId,email:e,country,age:age?parseInt(age):null,favorites:[]};
+  saveUserLocal();updateAuthUI();closeModal("authModal");
 }
 
-function openRandom() {
-  if (!allAnimes.length) return;
-  openAnime(allAnimes[Math.floor(Math.random()*allAnimes.length)].name);
+async function doEditProfile(){
+  if(!currentUser)return;
+  const newU=document.getElementById("epUser").value.trim();
+  const newE=document.getElementById("epEmail").value.trim();
+  const newC=document.getElementById("epCountry").value.trim();
+  const oldP=document.getElementById("epPassOld").value;
+  const newP=document.getElementById("epPassNew").value;
+  const err=document.getElementById("epErr");err.textContent="";
+  const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
+  const ui=(userData.users||[]).findIndex(x=>x.userId===currentUser.userId);
+  if(ui<0){err.textContent="User not found.";return;}
+  const u=userData.users[ui];
+  if(oldP){let pw;try{pw=dec3(u.password);}catch(e){pw=u.password;}if(pw!==oldP){err.textContent="Wrong current password.";return;}}
+  if(newU)userData.users[ui].username=enc3(newU);
+  if(newE)userData.users[ui].email=enc3(newE);
+  if(newC)userData.users[ui].country=enc3(newC);
+  if(newP&&newP.length>=6)userData.users[ui].password=enc3(newP);
+  userSha=await saveJSON("Data/User_Data.json",userData,userSha);
+  if(newU)currentUser.username=newU;
+  if(newE)currentUser.email=newE;
+  if(newC)currentUser.country=newC;
+  saveUserLocal();updateAuthUI();closeModal("editProfileModal");
 }
 
-document.getElementById("randomBtn").onclick  = openRandom;
-document.getElementById("menuToggle").onclick = () => {
-  document.getElementById("sidenav").classList.toggle("open");
-  document.getElementById("overlay").classList.add("active");
+function doSignout(){currentUser=null;localStorage.removeItem("animeUser");localStorage.removeItem("animeRemember");updateAuthUI();closeProfileDD();renderPagedGrid("home",1);}
+
+document.getElementById("authBtn").onclick=()=>openModal("authModal");
+document.getElementById("profileBtn").onclick=()=>{document.getElementById("profileDropdown").style.display=document.getElementById("profileDropdown").style.display==="none"?"":"none";};
+function closeProfileDD(){document.getElementById("profileDropdown").style.display="none";}
+function openEditProfile(){
+  if(!currentUser)return;
+  document.getElementById("epUser").value=currentUser.username;
+  document.getElementById("epEmail").value=currentUser.email||"";
+  document.getElementById("epCountry").value=currentUser.country||"";
+  document.getElementById("epPassOld").value="";document.getElementById("epPassNew").value="";
+  closeProfileDD();openModal("editProfileModal");
+}
+
+document.getElementById("searchInput").oninput=function(){
+  const q=this.value.trim().toLowerCase();
+  const dd=document.getElementById("searchDropdown");
+  if(!q){dd.style.display="none";return;}
+  const hits=allAnimes.filter(a=>a.name.toLowerCase().includes(q)).slice(0,6);
+  if(!hits.length){dd.style.display="none";return;}
+  dd.innerHTML=hits.map(a=>`<div class="dd-item" onclick="openAnime('${esc(a.name)}')">${a.name}</div>`).join("");
+  dd.style.display="block";
 };
+document.getElementById("searchInput").onkeydown=e=>{if(e.key==="Enter")doSearch();};
+document.getElementById("searchBtn").onclick=doSearch;
+document.addEventListener("click",e=>{if(!e.target.closest(".search-wrap"))document.getElementById("searchDropdown").style.display="none";if(!e.target.closest(".profile-wrap"))closeProfileDD();});
 
-function closeSidenav() {
-  document.getElementById("sidenav").classList.remove("open");
-  document.getElementById("overlay").classList.remove("active");
-}
-
-function closePlayer() {
-  const v = document.getElementById("videoEl");
-  v.pause(); v.src = "";
-  closeModal("playerModal");
-}
-
-function openModal(id) {
-  document.getElementById(id).classList.add("active");
-  document.getElementById("overlay").classList.add("active");
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove("active");
-  if (!document.querySelector(".modal.active"))
-    document.getElementById("overlay").classList.remove("active");
-}
-function closeAll() {
-  document.querySelectorAll(".modal.active").forEach(m => m.classList.remove("active"));
-  closeSidenav();
-  document.getElementById("overlay").classList.remove("active");
-  try { document.getElementById("videoEl").pause(); } catch(e){}
+function doSearch(){
+  const q=document.getElementById("searchInput").value.trim().toLowerCase();
+  document.getElementById("searchDropdown").style.display="none";
+  if(!q)return;
+  searchQuery=q;showPage("search");
+  document.getElementById("searchTitle").textContent=`Results for "${q}"`;
+  renderPagedGrid("search",1);
 }
 
-function esc(s) { return (s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
+function showPage(p){
+  ["home","genres","search","genreFilter","favorites","recommended"].forEach(id=>{
+    const el=document.getElementById(id+"Page");if(el)el.style.display=(id===p)?"":"none";
+  });
+  if(p==="genres")renderGenresPage();
+  if(p==="favorites")renderFavorites();
+  if(p==="recommended")renderRecommended();
+}
+
+function openRandom(){if(!allAnimes.length)return;openAnime(allAnimes[Math.floor(Math.random()*allAnimes.length)].name);}
+document.getElementById("randomBtn").onclick=openRandom;
+document.getElementById("menuToggle").onclick=()=>{document.getElementById("sidenav").classList.toggle("open");document.getElementById("overlay").classList.add("active");};
+function closeSidenav(){document.getElementById("sidenav").classList.remove("open");if(!document.querySelector(".modal.active"))document.getElementById("overlay").classList.remove("active");}
+function openModal(id){document.getElementById(id).classList.add("active");document.getElementById("overlay").classList.add("active");}
+function closeModal(id){document.getElementById(id).classList.remove("active");if(!document.querySelector(".modal.active"))document.getElementById("overlay").classList.remove("active");}
+function closeAll(){document.querySelectorAll(".modal.active").forEach(m=>m.classList.remove("active"));closeSidenav();document.getElementById("overlay").classList.remove("active");closeProfileDD();}
+function esc(s){return(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 
 init();
 </script>
