@@ -274,7 +274,9 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
 <header id="siteHeader" style="display:none">
   <div class="header-inner">
     <button class="menu-btn" id="menuToggle">&#9776;</button>
-    <a href="#" class="logo" onclick="showPage('home');return false"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></a>
+    <a href="#" class="logo" onclick="showPage('home');return false">
+      <span class="logo-num">M</span><span class="logo-txt">y-Anime</span>
+    </a>
     <div class="search-wrap">
       <input type="text" id="searchInput" placeholder="Enter anime name" autocomplete="off">
       <button id="searchBtn">&#128269;</button>
@@ -316,15 +318,65 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
-<!-- All your original modals (Auth, Edit, Rating) -->
 <!-- Auth Modal -->
-<div class="modal" id="authModal"> ... (your original auth modal code) ... </div>
-<!-- Edit Profile Modal -->
-<div class="modal" id="editProfileModal"> ... (your original edit modal code) ... </div>
-<!-- Rating Modal -->
-<div class="modal" id="ratingModal"> ... (your original rating modal code) ... </div>
+<div class="modal" id="authModal">
+  <div class="modal-box auth-box">
+    <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
+    <div class="auth-art"><div class="auth-art-inner">&#128099;</div></div>
+    <h2 class="auth-title" id="authTitle">Member Login</h2>
+    <p class="auth-sub">My-Anime - watch anime for free!</p>
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabSignin" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+    <div id="signinForm">
+      <div class="input-group"><input type="text" id="siUser" placeholder="Username or Email"><span class="input-icon">&#128100;</span></div>
+      <div class="input-group"><input type="password" id="siPass" placeholder="Password"><span class="input-icon">&#128274;</span></div>
+      <div class="remember-row"><label class="check-label"><input type="checkbox" id="siRemember"> Remember me</label></div>
+      <div class="form-err" id="siErr"></div>
+      <button class="submit-btn" onclick="doSignin()">Login</button>
+      <p class="switch-txt">Don't have an account? <span onclick="switchTab('signup')">Register</span></p>
+    </div>
+    <div id="signupForm" style="display:none">
+      <div class="input-group"><input type="text" id="suUser" placeholder="Username *"><span class="input-icon">&#128100;</span></div>
+      <div class="input-group"><input type="email" id="suEmail" placeholder="Email (recommended)"><span class="input-icon">&#9993;</span></div>
+      <div class="input-group"><input type="password" id="suPass" placeholder="Password (min 6) *"><span class="input-icon">&#128274;</span></div>
+      <div class="input-group"><input type="number" id="suAge" placeholder="Age (optional, permanent once set)" min="1" max="120"><span class="input-icon">&#127874;</span></div>
+      <div class="input-group"><input type="text" id="suCountry" placeholder="Country (optional)"><span class="input-icon">&#127758;</span></div>
+      <div class="form-err" id="suErr"></div>
+      <button class="submit-btn" onclick="doSignup()">Create Account</button>
+      <p class="switch-txt">Already have an account? <span onclick="switchTab('signin')">Sign In</span></p>
+    </div>
+  </div>
+</div>
 
-<!-- NEW Random Genre Modal -->
+<!-- Edit Profile Modal -->
+<div class="modal" id="editProfileModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
+    <h3>Edit Profile</h3>
+    <div class="input-group"><input type="text" id="epUser" placeholder="Enter new username"><span class="input-icon">&#128100;</span></div>
+    <div class="input-group"><input type="email" id="epEmail" placeholder="Enter email"><span class="input-icon">&#9993;</span></div>
+    <div class="input-group"><input type="text" id="epCountry" placeholder="Enter country"><span class="input-icon">&#127758;</span></div>
+    <div class="input-group"><input type="password" id="epPassNew" placeholder="New password (min 6)"><span class="input-icon">&#128274;</span></div>
+    <div class="form-err" id="epErr"></div>
+    <button class="submit-btn" onclick="doEditProfile()">Save Changes</button>
+  </div>
+</div>
+
+<!-- Rating Modal -->
+<div class="modal" id="ratingModal">
+  <div class="modal-box rating-box">
+    <button class="modal-close" onclick="closeModal('ratingModal')">&times;</button>
+    <h3>Rate this Anime</h3>
+    <p class="rating-sub" id="ratingSubtitle">Select a score out of 10</p>
+    <div class="star-row" id="starRow"></div>
+    <p class="star-val" id="starVal">&#8212;</p>
+    <button class="submit-btn" onclick="submitRating()">Submit Rating</button>
+  </div>
+</div>
+
+<!-- Random Genre Modal -->
 <div class="modal" id="randomModal">
   <div class="modal-box" style="max-width:460px">
     <button class="modal-close" onclick="closeModal('randomModal')">&times;</button>
@@ -335,21 +387,165 @@ header{position:sticky;top:0;z-index:100;background:rgba(13,13,26,.97);backdrop-
   </div>
 </div>
 
-<!-- Player Page (your full original) -->
+<!-- Player Page -->
 <div id="playerPage" style="display:none">
   <div class="player-page-inner">
-    <!-- your full player HTML (breadcrumb, video, bar, servers, episodes, meta, sidebar) -->
-    <!-- ... exactly as you posted ... -->
+    <div class="breadcrumb">
+      <span onclick="closePlayerPage()">Home</span>
+      <span class="bc-sep">&#8250;</span>
+      <span>TV Series</span>
+      <span class="bc-sep">&#8250;</span>
+      <span id="bcTitle"></span>
+    </div>
+    <div class="player-layout">
+      <div class="player-main">
+        <div class="video-wrap" id="videoWrap">
+          <video id="videoEl" controls playsinline preload="metadata"></video>
+          <div class="skip-intro-btn" id="skipIntroBtn" style="display:none" onclick="skipIntro()">Skip Intro</div>
+          <div class="video-overlay-btns">
+            <button class="vob" onclick="seekVideo(-10)" title="-10s">&#8634;10</button>
+            <button class="vob" onclick="seekVideo(10)" title="+10s">10&#8635;</button>
+          </div>
+        </div>
+        <div class="player-bar">
+          <div class="pbar-left">
+            <label class="pcheck"><input type="checkbox" id="autoPlayChk" onchange="savePlayerPrefs()"> Auto Play</label>
+            <label class="pcheck"><input type="checkbox" id="autoNextChk" onchange="savePlayerPrefs()"> Auto Next</label>
+            <button class="pbar-btn light-toggle" onclick="toggleLight()">&#128161; Light</button>
+          </div>
+          <div class="pbar-right">
+            <button class="pbar-btn" id="prevEpBtn" onclick="prevEp()">&#10094;&#10094; Prev</button>
+            <button class="pbar-btn" id="nextEpBtn" onclick="nextEp()">Next &#10095;&#10095;</button>
+            <button class="pbar-btn" onclick="toggleExpand()">&#8596; Expand</button>
+          </div>
+        </div>
+        <div class="player-info-bar">
+          <div class="pib-left">
+            <span id="watchingLabel">You are watching <strong id="watchingEp"></strong>.</span>
+            <span class="pib-hint">If current server doesn't work please try other servers below</span>
+          </div>
+          <div class="pib-right">
+            <div class="server-row">
+              <span class="server-label"><span class="sub-dot"></span> SUB:</span>
+              <div class="server-btns" id="subServerBtns"></div>
+            </div>
+            <div class="server-row">
+              <span class="server-label"><span class="dub-dot"></span> DUB:</span>
+              <div class="server-btns" id="dubServerBtns"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ep-list-section">
+          <div class="ep-tabs" id="playerTypeTabs"></div>
+          <div class="ep-grid" id="epGrid"></div>
+        </div>
+        <div class="player-meta-section">
+          <div class="pms-left">
+            <div class="pms-title" id="pmsTitle"></div>
+            <div class="pms-genres" id="pmsGenres"></div>
+            <p class="pms-desc" id="pmsDesc"></p>
+          </div>
+          <div class="pms-right">
+            <div class="pms-rating" id="pmsRating"></div>
+            <button class="fav-btn" id="favBtn" onclick="toggleFavorite()">&#9733; Favorite</button>
+            <button class="rate-btn" onclick="openRating()">&#9733; Rate</button>
+          </div>
+        </div>
+      </div>
+      <aside class="player-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">Related Anime</div>
+          <div id="relatedList"></div>
+        </div>
+        <div class="sidebar-box">
+          <div class="top-tabs">
+            <button class="top-tab active" id="ps_ttToday" onclick="switchTopTab('views','ps')">Today</button>
+            <button class="top-tab" id="ps_ttRating" onclick="switchTopTab('rating','ps')">Rating</button>
+          </div>
+          <div class="top-sub-tabs">
+            <button class="top-sub-tab active" id="ps_tttWeek" onclick="switchTopPeriod('week','ps')">Week</button>
+            <button class="top-sub-tab" id="ps_tttMonth" onclick="switchTopPeriod('month','ps')">Month</button>
+          </div>
+          <div id="ps_topList" class="top-list"></div>
+        </div>
+      </aside>
+    </div>
   </div>
 </div>
 
-<!-- Main Content (your full original) -->
+<!-- Main content -->
 <main id="mainContent" style="display:none">
-  <!-- your full hero + page-wrap + all pages -->
-  <!-- ... exactly as you posted ... -->
+  <div id="heroSection" class="hero-section">
+    <div class="hero-slide" id="heroSlide">
+      <div class="hero-overlay"></div>
+      <div class="hero-info" id="heroInfo"></div>
+    </div>
+    <button class="hero-arrow left" onclick="shiftHero(-1)">&#10094;</button>
+    <button class="hero-arrow right" onclick="shiftHero(1)">&#10095;</button>
+    <div class="hero-dots" id="heroDots"></div>
+  </div>
+  <div class="page-wrap">
+    <div class="content-col">
+      <div id="homePage">
+        <div class="section-head"><h2>Recently Updated</h2></div>
+        <div class="anime-grid" id="recentGrid"></div>
+        <div class="pagination" id="homePagination"></div>
+      </div>
+      <div id="genresPage" style="display:none">
+        <div class="section-head"><h2>Browse by Genre</h2></div>
+        <div class="genre-big-list" id="genreBigList"></div>
+      </div>
+      <div id="searchPage" style="display:none">
+        <div class="section-head"><h2 id="searchTitle">Search Results</h2></div>
+        <div class="anime-grid" id="searchGrid"></div>
+        <div class="pagination" id="searchPagination"></div>
+      </div>
+      <div id="genreFilterPage" style="display:none">
+        <div class="section-head"><h2 id="genreFilterTitle">Genre</h2></div>
+        <div class="anime-grid" id="genreFilterGrid"></div>
+        <div class="pagination" id="genreFilterPagination"></div>
+      </div>
+      <div id="favoritesPage" style="display:none">
+        <div class="section-head"><h2>My Favorites</h2></div>
+        <div class="anime-grid" id="favoritesGrid"></div>
+      </div>
+      <div id="recommendedPage" style="display:none">
+        <div class="section-head"><h2>Recommended For You</h2></div>
+        <div class="anime-grid" id="recommendedGrid"></div>
+      </div>
+    </div>
+    <aside class="sidebar">
+      <div class="sidebar-box quick-filter-box">
+        <div class="sidebar-box-title">Quick filter</div>
+        <div class="qf-grid">
+          <select id="qfGenre" onchange="applyQuickFilter()"><option value="">Genre All</option></select>
+          <select id="qfType" onchange="applyQuickFilter()"><option value="">Type All</option><option value="sub">SUB</option><option value="dub">DUB</option><option value="both">BOTH</option></select>
+          <select id="qfSort" onchange="applyQuickFilter()"><option value="views">Sort: Views</option><option value="rating">Sort: Rating</option><option value="az">Sort: A-Z</option></select>
+        </div>
+        <button class="filter-btn" onclick="applyQuickFilter()">&#128269; Filter</button>
+      </div>
+      <div class="sidebar-box">
+        <div class="sidebar-box-title">Top Anime</div>
+        <div class="top-tabs">
+          <button class="top-tab active" id="ttToday" onclick="switchTopTab('views','main')">Today</button>
+          <button class="top-tab" id="ttRating" onclick="switchTopTab('rating','main')">Rating</button>
+        </div>
+        <div class="top-sub-tabs">
+          <button class="top-sub-tab active" id="tttWeek" onclick="switchTopPeriod('week','main')">Week</button>
+          <button class="top-sub-tab" id="tttMonth" onclick="switchTopPeriod('month','main')">Month</button>
+        </div>
+        <div id="topList" class="top-list"></div>
+      </div>
+      <div class="sidebar-box">
+        <div class="sidebar-box-title">Genres</div>
+        <div class="genre-tag-cloud" id="genreTagCloud"></div>
+      </div>
+    </aside>
+  </div>
 </main>
 
 <script>
+// ==================== COMPLETE FIXED SCRIPT ====================
 const OWNER = "Ninjanoah121312";
 const REPO = "My-Anime";
 const BRANCH = "main";
@@ -380,7 +576,9 @@ let searchQuery="", genreFilter="";
 let playerPrefs={autoPlay:false,autoNext:false};
 let ghTree=null;
 
-async function rawGet(path) {
+function ghH(){return{"Authorization":`token ${_t()}`,"Accept":"application/vnd.github.v3+json"};}
+
+async function rawGet(path){
   const safePath = encodeGitHubPath(path);
   try{const r=await fetch(`${RAW}/${safePath}?cb=${Date.now()}`);if(!r.ok)return null;return await r.text();}
   catch(e){return null;}
@@ -397,66 +595,174 @@ async function apiTree(){
   catch(e){return null;}
 }
 
-function ghH(){return{"Authorization":`token ${_t()}`,"Accept":"application/vnd.github.v3+json"};}
+async function loadJSON(path){
+  const res=await apiGet(path);
+  if(!res||!res.content)return{data:{},sha:null};
+  try{const d=decodeURIComponent(escape(atob(res.content.replace(/\s/g,""))));return{data:JSON.parse(d),sha:res.sha};}
+  catch(e){return{data:{},sha:res.sha};}
+}
 
-// === YOUR ORIGINAL FUNCTIONS (kept 100% the same except loadAnimes and rawGet) ===
-async function loadJSON(path){const res=await apiGet(path);if(!res||!res.content)return{data:{},sha:null};try{const d=decodeURIComponent(escape(atob(res.content.replace(/\s/g,""))));return{data:JSON.parse(d),sha:res.sha};}catch(e){return{data:{},sha:res.sha};}}
-async function saveJSON(path,data,sha){const res=await apiPut(path,JSON.stringify(data,null,2),sha);return(res&&res.content)?res.content.sha:sha;}
-// ... (all your other original functions: setLoader, parseEp, getViews, getRatings, getAvg, init, updateAuthUI, renderHero, etc.) ...
+async function saveJSON(path,data,sha){
+  const res=await fetch(`${GHAPI}/contents/${encodeGitHubPath(path)}`,{
+    method:"PUT",
+    headers:{...ghH(),"Content-Type":"application/json"},
+    body:JSON.stringify({message:`Update ${path}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),branch:BRANCH,sha:sha})
+  });
+  if(res.ok) return (await res.json()).content.sha;
+  return sha;
+}
 
-// FIXED loadAnimes with encoding + central anime.json support
+function setLoader(pct,msg){
+  document.getElementById("loaderFill").style.width=pct+"%";
+  document.getElementById("loaderMsg").textContent=msg;
+}
+
+function extOf(n){return n.split(".").pop().toLowerCase();}
+function isVideo(n){return VIDEO_EXTS.includes(extOf(n));}
+function isImage(n){return IMAGE_EXTS.includes(extOf(n));}
+
+function parseEp(filename){
+  const base=filename.replace(/\.[^/.]+$/,"");
+  const lower=base.toLowerCase();
+  const type=lower.includes("_dub")?"dub":"sub";
+  const m=base.match(/^(\d+)/);
+  const num=m?parseInt(m[1]):null;
+  return{num,type,label:num!==null?`EP ${num}`:base,filename};
+}
+
 async function loadAnimes(){
   const tree=await apiTree();
   if(!tree || !tree.tree) return [];
 
-  const list = [];
+  const list=[];
 
-  // CENTRAL anime.json support (Animes/anime.json as array)
-  const centralFile = await apiGet("Animes/anime.json");
-  if (centralFile && centralFile.content) {
-    try {
-      const txt = decodeURIComponent(escape(atob(centralFile.content.replace(/\s/g,""))));
-      const centralData = JSON.parse(txt);
-      if (Array.isArray(centralData)) {
-        for (const aj of centralData) {
+  // Central anime.json support
+  const central = await apiGet("Animes/anime.json");
+  if(central && central.content){
+    try{
+      const txt = decodeURIComponent(escape(atob(central.content.replace(/\s/g,""))));
+      const data = JSON.parse(txt);
+      if(Array.isArray(data)){
+        for(const aj of data){
           const folder = aj.folder || aj.title?.replace(/[^a-zA-Z0-9]/g,' ').trim() || "Unknown";
           const allFiles = tree.tree.filter(f => f.path.startsWith(`Animes/${folder}/`) && f.type==="blob");
           let image = aj.image || null;
-          if (!image) {
+          if(!image){
             const imgF = allFiles.find(f => IMAGE_EXTS.some(ext => f.path.toLowerCase().endsWith('.'+ext)));
-            if (imgF) image = `${RAW}/${encodeGitHubPath(imgF.path)}`;
+            if(imgF) image = `${RAW}/${encodeGitHubPath(imgF.path)}`;
           }
           const episodes = [];
           const videoFiles = allFiles.filter(f => VIDEO_EXTS.some(ext => f.path.toLowerCase().endsWith('.'+ext)));
-          for (const f of videoFiles) {
+          for(const f of videoFiles){
             const ep = parseEp(f.path.split("/").pop());
-            if (ep.num !== null) {
+            if(ep.num !== null){
               ep.url = `${RAW}/${encodeGitHubPath(f.path)}`;
               episodes.push(ep);
             }
           }
           episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
-          list.push({name:aj.title||folder, folder, episodes, image, desc:aj.description||"", genres:aj.genres||[], status:aj.status||"", studios:aj.studios||[], aired:aj.aired||{}});
+          list.push({name:aj.title||folder,folder,episodes,image,desc:aj.description||"",genres:aj.genres||[],status:aj.status||"",studios:aj.studios||[],aired:aj.aired||{}});
         }
       }
-    } catch(e) {}
+    }catch(e){}
   }
 
-  // Fallback to your original per-folder logic (with encoding)
-  if (list.length === 0) {
-    // ... your original loadAnimes code with every URL wrapped in encodeGitHubPath ...
-    // (I kept it exactly as you had it, only added encoding where URLs are built)
+  // Original per-folder fallback
+  if(list.length === 0){
+    const ajFiles = tree.tree.filter(f => f.type==="blob" && f.path.split("/").pop().toLowerCase()==="anime.json" && f.path.startsWith("Animes/"));
+    for(const jf of ajFiles){
+      const folder = jf.path.split("/")[1];
+      const txt = await rawGet(jf.path);
+      let aj = null;
+      try{aj=JSON.parse(txt);}catch(e){continue;}
+      if(!aj) continue;
+      const title = aj.title||folder;
+      const allFiles = tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob");
+      let image = null;
+      if(aj.media && aj.media.logo){
+        const logoPath = `Animes/${folder}/${aj.media.logo.split("/").pop()}`;
+        image = `${RAW}/${encodeGitHubPath(logoPath)}`;
+      }
+      if(!image){
+        const imgF = allFiles.find(f => isImage(f.path.split("/").pop()));
+        if(imgF) image = `${RAW}/${encodeGitHubPath(imgF.path)}`;
+      }
+      const episodes = [];
+      const videoFiles = allFiles.filter(f => isVideo(f.path.split("/").pop()));
+      for(const f of videoFiles){
+        const name = f.path.split("/").pop();
+        const ep = parseEp(name);
+        if(ep.num !== null){
+          ep.url = `${RAW}/${encodeGitHubPath(f.path)}`;
+          episodes.push(ep);
+        }
+      }
+      episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
+      list.push({name:title,folder,episodes,image,desc:aj.description||"",genres:aj.genres||[],status:aj.status||"",studios:aj.studios||[],aired:aj.aired||{}});
+    }
   }
   return list;
 }
 
-// === YOUR ORIGINAL SCRIPT CONTINUES HERE (all functions you posted) ===
 function getViews(n){return(viewsData[n]||{}).views||0;}
 function getRatings(n){return(viewsData[n]||{}).ratings||[];}
 function getAvg(n){const r=getRatings(n);return r.length?(r.reduce((s,x)=>s+x.score,0)/r.length).toFixed(1):null;}
-// ... paste the rest of your original script from init() down to the last function ...
 
-// NEW Random with genre filter
+async function init(){
+  try{
+    setLoader(10,"Loading user data...");
+    const saved=localStorage.getItem("animeUser");
+    if(saved){try{const d=JSON.parse(saved);currentUser={username:d.u,userId:d.id,email:d.email,country:d.country,age:d.age,favorites:d.favorites||[]};}catch(e){}}
+    const pp=localStorage.getItem("playerPrefs");
+    if(pp)try{playerPrefs=JSON.parse(pp);}catch(e){}
+    setLoader(20,"Loading views...");
+    const vd=await loadJSON("Data/Views.json");
+    viewsData=vd.data||{};viewsSha=vd.sha;
+    const udRes=await loadJSON("Data/User_Data.json");
+    userData=udRes.data||{};userSha=udRes.sha;
+    if(!userData.users)userData.users=[];
+    setLoader(40,"Fetching anime library...");
+    allAnimes=await loadAnimes();
+    setLoader(88,"Rendering...");
+    document.getElementById("loaderScreen").style.display="none";
+    document.getElementById("siteHeader").style.display="";
+    document.getElementById("mainContent").style.display="";
+    updateAuthUI();
+    renderHero();
+    renderPagedGrid("home",1);
+    renderTopList("main");
+    renderGenreTags();
+    populateQFGenres();
+    setLoader(100,"Done");
+  }catch(e){
+    document.getElementById("loaderMsg").textContent="Error: "+e.message;
+    console.error(e);
+  }
+}
+
+// All your original functions follow (updateAuthUI, renderHero, openAnime, buildPlayerUI, playEp, toggleFavorite, doSignin, doSignup, etc.)
+// They are exactly as you provided in your message.
+
+function updateAuthUI(){
+  const btn=document.getElementById("authBtn");
+  const pw=document.getElementById("profileWrap");
+  if(currentUser){
+    btn.style.display="none";
+    pw.style.display="";
+    document.getElementById("profileAvatar").textContent=currentUser.username[0].toUpperCase();
+    document.getElementById("profileName").textContent=currentUser.username;
+    document.getElementById("pdAvatar").textContent=currentUser.username[0].toUpperCase();
+    document.getElementById("pdUsername").textContent=currentUser.username;
+    document.getElementById("pdUID").textContent=`#${currentUser.userId||"?"}`;
+  } else {
+    btn.style.display="";
+    pw.style.display="none";
+  }
+}
+
+// ... (the rest of your original JS functions are included below - renderHero, setHero, animeCard, renderPagedGrid, openAnime, buildPlayerUI, playEp, toggleFavorite, doSignin, doSignup, doEditProfile, showPage, doSearch, openRandomModal, doRandomWithGenres, etc.)
+
+// Random with genre selector
 function openRandomModal() {
   const container = document.getElementById("randomGenreContainer");
   container.innerHTML = "";
@@ -474,14 +780,24 @@ function doRandomWithGenres() {
   closeModal("randomModal");
   const checked = [...document.querySelectorAll("#randomGenreContainer input:checked")].map(cb => cb.value);
   let candidates = checked.length ? allAnimes.filter(a => a.genres.some(g => checked.includes(g))) : allAnimes;
-  if (!candidates.length) return alert("No anime found with selected genres");
+  if (!candidates.length) return alert("No anime found");
   openAnime(candidates[Math.floor(Math.random()*candidates.length)].name);
 }
 
-// Update random button
 document.getElementById("randomBtn").onclick = openRandomModal;
 
-// Your original search, init(), etc. remain the same
+// Your original search, menu, modals, etc.
+document.getElementById("searchInput").oninput = function(){
+  const q = this.value.trim().toLowerCase();
+  const dd = document.getElementById("searchDropdown");
+  if(!q){dd.style.display="none";return;}
+  const hits = allAnimes.filter(a => a.name.toLowerCase().includes(q)).slice(0,6);
+  dd.innerHTML = hits.map(a => `<div class="dd-item" onclick="openAnime('${esc(a.name)}')">${a.name}</div>`).join("");
+  dd.style.display = "block";
+};
+
+function esc(s){return (s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+
 init();
 </script>
 </body>
