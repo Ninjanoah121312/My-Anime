@@ -120,16 +120,27 @@
 
 <!-- Edit Profile Modal -->
 <div class="modal" id="editProfileModal">
-  <div class="modal-box">
+  <div class="modal-box ep-modal-box">
     <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
-    <h3>Edit Profile</h3>
-    <div class="input-group"><input type="text" id="epUser" placeholder="New Username"></div>
-    <div class="input-group"><input type="email" id="epEmail" placeholder="Email"></div>
-    <div class="input-group"><input type="text" id="epCountry" placeholder="Country"></div>
-    <div class="input-group"><input type="password" id="epPassOld" placeholder="Current Password (required to change)"></div>
-    <div class="input-group"><input type="password" id="epPassNew" placeholder="New Password (leave blank to keep)"></div>
-    <div class="form-err" id="epErr"></div>
-    <button class="submit-btn" onclick="doEditProfile()">Save Changes</button>
+    <div class="ep-header">
+      <div class="ep-avatar" id="epAvatarBig">?</div>
+      <div>
+        <div class="ep-title">Edit Profile</div>
+        <div class="ep-uid" id="epUIDLabel"></div>
+      </div>
+    </div>
+    <div class="ep-fields">
+      <label class="ep-label">Username</label>
+      <div class="input-group"><input type="text" id="epUser" placeholder="Enter new username"><span class="input-icon">&#128100;</span></div>
+      <label class="ep-label">Email</label>
+      <div class="input-group"><input type="email" id="epEmail" placeholder="Enter email"><span class="input-icon">&#9993;</span></div>
+      <label class="ep-label">Country</label>
+      <div class="input-group"><input type="text" id="epCountry" placeholder="Enter country"><span class="input-icon">&#127758;</span></div>
+      <label class="ep-label">New Password <span class="ep-optional">(leave blank to keep current)</span></label>
+      <div class="input-group"><input type="password" id="epPassNew" placeholder="New password (min 6)"><span class="input-icon">&#128274;</span></div>
+      <div class="form-err" id="epErr"></div>
+      <button class="submit-btn" onclick="doEditProfile()">Save Changes</button>
+    </div>
   </div>
 </div>
 
@@ -278,7 +289,7 @@
         <div class="sidebar-box-title">Quick filter</div>
         <div class="qf-grid">
           <select id="qfGenre" onchange="applyQuickFilter()"><option value="">Genre All</option></select>
-          <select id="qfType" onchange="applyQuickFilter()"><option value="">Type All</option><option>SUB</option><option>DUB</option></select>
+          <select id="qfType" onchange="applyQuickFilter()"><option value="">Type All</option><option value="sub">SUB</option><option value="dub">DUB</option><option value="both">BOTH</option></select>
           <select id="qfSort" onchange="applyQuickFilter()"><option value="views">Sort: Views</option><option value="rating">Sort: Rating</option><option value="az">Sort: A-Z</option></select>
         </div>
         <button class="filter-btn" onclick="applyQuickFilter()">&#128269; Filter</button>
@@ -388,7 +399,9 @@ function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 
 async function loadAnimes(){
   const tree=await apiTree();
-  if(!tree||!tree.tree)return[];
+  if(!tree){setLoader(45,"GitHub API error - check token/network");console.error("apiTree returned null");return[];}
+  if(!tree.tree){setLoader(45,"GitHub tree empty: "+JSON.stringify(tree).slice(0,120));console.error("tree.tree missing",tree);return[];}
+  console.log("Tree loaded, items:",tree.tree.length);
 
   function ghUrlToRepoPath(url){
     if(!url)return null;
@@ -419,6 +432,7 @@ async function loadAnimes(){
     f.path.split("/").pop().toLowerCase()==="anime.json"&&
     f.path.startsWith("Animes/")
   );
+  console.log("Anime.json files found:",ajFiles.map(f=>f.path));
   const list=[];
 
   for(const jf of ajFiles){
@@ -503,19 +517,27 @@ function getAvg(n){const r=getRatings(n);return r.length?(r.reduce((s,x)=>s+x.sc
 
 async function init(){
   try{
-    setLoader(10,"Loading data...");
+    setLoader(10,"Loading user data...");
     const saved=localStorage.getItem("animeUser");
-    if(saved){try{const d=JSON.parse(saved);currentUser={username:decLocal(d.u),userId:d.id,email:d.email?decLocal(d.email):"",country:d.country?decLocal(d.country):"",age:d.age||null,favorites:d.favorites||[]};}catch(e){}}
-    const rem=localStorage.getItem("animeRemember");
-    if(!currentUser&&rem){try{const d=JSON.parse(rem);const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(u){currentUser={username:dec3(u.username)||u.username,userId:u.userId,email:u.email?dec3(u.email):"",country:u.country||"",age:u.age||null,favorites:u.favorites||[]};}}catch(e){}}
+    if(saved){try{const d=JSON.parse(saved);currentUser={username:decLocal(d.u),userId:d.id,email:d.email?decLocal(d.email):"",country:d.country?decLocal(d.country):"",age:d.age||null,favorites:d.favorites||[]};}catch(e){localStorage.removeItem("animeUser");}}
     const pp=localStorage.getItem("playerPrefs");
     if(pp)try{playerPrefs=JSON.parse(pp);}catch(e){}
     setLoader(20,"Loading views...");
-    const vd=await loadJSON("Data/Views.json");viewsData=vd.data;viewsSha=vd.sha;
-    if(!userData.users){const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;}
-    setLoader(40,"Fetching anime...");
+    const vd=await loadJSON("Data/Views.json");
+    viewsData=vd.data||{};viewsSha=vd.sha;
+    const udRes=await loadJSON("Data/User_Data.json");
+    userData=udRes.data||{};userSha=udRes.sha;
+    if(!userData.users)userData.users=[];
+    if(currentUser){
+      const rem=localStorage.getItem("animeRemember");
+      if(rem){try{const d=JSON.parse(rem);const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(!u){localStorage.removeItem("animeRemember");}}catch(e){}}
+    } else {
+      const rem=localStorage.getItem("animeRemember");
+      if(rem){try{const d=JSON.parse(rem);const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(u){currentUser={username:dec3(u.username)||u.username,userId:u.userId,email:u.email?dec3(u.email):"",country:u.country?dec3(u.country):"",age:u.age||null,favorites:u.favorites||[]};}}catch(e){localStorage.removeItem("animeRemember");}}
+    }
+    setLoader(40,"Fetching anime library...");
     allAnimes=await loadAnimes();
-    setLoader(90,"Rendering...");
+    setLoader(88,"Rendering...");
     document.getElementById("loaderScreen").style.display="none";
     document.getElementById("siteHeader").style.display="";
     document.getElementById("mainContent").style.display="";
@@ -526,7 +548,11 @@ async function init(){
     renderGenreTags();
     populateQFGenres();
     setLoader(100,"Done");
-  }catch(e){setLoader(0,"Error: "+e.message);}
+  }catch(e){
+    document.getElementById("loaderMsg").textContent="Error: "+e.message+" — check console";
+    document.getElementById("loaderFill").style.background="#ef4444";
+    console.error("Init error:",e);
+  }
 }
 
 function updateAuthUI(){
@@ -669,15 +695,18 @@ function renderGenreTags(){
 function populateQFGenres(){
   const all=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
   const sel=document.getElementById("qfGenre");
+  sel.innerHTML='<option value="">Genre All</option>';
   all.forEach(g=>{const o=document.createElement("option");o.value=g;o.textContent=g;sel.appendChild(o);});
 }
 function applyQuickFilter(){
   const g=document.getElementById("qfGenre").value;
-  const t=document.getElementById("qfType").value.toLowerCase();
+  const t=document.getElementById("qfType").value;
   const s=document.getElementById("qfSort").value;
   let list=[...allAnimes];
   if(g)list=list.filter(a=>a.genres.includes(g));
-  if(t)list=list.filter(a=>a.episodes.some(e=>e.type===t));
+  if(t==="sub")list=list.filter(a=>a.episodes.some(e=>e.type==="sub"));
+  else if(t==="dub")list=list.filter(a=>a.episodes.some(e=>e.type==="dub"));
+  else if(t==="both")list=list.filter(a=>a.episodes.some(e=>e.type==="sub")&&a.episodes.some(e=>e.type==="dub"));
   if(s==="rating")list.sort((a,b)=>parseFloat(getAvg(b.name)||0)-parseFloat(getAvg(a.name)||0));
   else if(s==="az")list.sort((a,b)=>a.name.localeCompare(b.name));
   else list.sort((a,b)=>getViews(b.name)-getViews(a.name));
@@ -927,14 +956,13 @@ async function doEditProfile(){
   const newU=document.getElementById("epUser").value.trim();
   const newE=document.getElementById("epEmail").value.trim();
   const newC=document.getElementById("epCountry").value.trim();
-  const oldP=document.getElementById("epPassOld").value;
   const newP=document.getElementById("epPassNew").value;
   const err=document.getElementById("epErr");err.textContent="";
+  if(newP&&newP.length<6){err.textContent="New password must be at least 6 chars.";return;}
+  err.textContent="Saving...";
   const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
   const ui=(userData.users||[]).findIndex(x=>x.userId===currentUser.userId);
   if(ui<0){err.textContent="User not found.";return;}
-  const u=userData.users[ui];
-  if(oldP){let pw;try{pw=dec3(u.password);}catch(e){pw=u.password;}if(pw!==oldP){err.textContent="Wrong current password.";return;}}
   if(newU)userData.users[ui].username=enc3(newU);
   if(newE)userData.users[ui].email=enc3(newE);
   if(newC)userData.users[ui].country=enc3(newC);
@@ -953,10 +981,13 @@ document.getElementById("profileBtn").onclick=()=>{document.getElementById("prof
 function closeProfileDD(){document.getElementById("profileDropdown").style.display="none";}
 function openEditProfile(){
   if(!currentUser)return;
-  document.getElementById("epUser").value=currentUser.username;
+  document.getElementById("epUser").value=currentUser.username||"";
   document.getElementById("epEmail").value=currentUser.email||"";
   document.getElementById("epCountry").value=currentUser.country||"";
-  document.getElementById("epPassOld").value="";document.getElementById("epPassNew").value="";
+  document.getElementById("epPassNew").value="";
+  document.getElementById("epErr").textContent="";
+  document.getElementById("epAvatarBig").textContent=(currentUser.username||"?")[0].toUpperCase();
+  document.getElementById("epUIDLabel").textContent="User ID #"+(currentUser.userId||"?");
   closeProfileDD();openModal("editProfileModal");
 }
 
