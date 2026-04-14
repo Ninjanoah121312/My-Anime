@@ -389,49 +389,98 @@ function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 async function loadAnimes(){
   const tree=await apiTree();
   if(!tree||!tree.tree)return[];
-  const ajFiles=tree.tree.filter(f=>f.type==="blob"&&f.path.split("/").pop().toLowerCase()==="anime.json"&&f.path.startsWith("Animes/"));
+
+  function ghUrlToRepoPath(url){
+    if(!url)return null;
+    const decoded=decodeURIComponent(url);
+    const markers=[
+      `/blob/${BRANCH}/`,
+      `/tree/${BRANCH}/`,
+      `/raw/${BRANCH}/`
+    ];
+    for(const m of markers){
+      const idx=decoded.indexOf(m);
+      if(idx!==-1)return decoded.slice(idx+m.length);
+    }
+    if(!url.startsWith("http"))return url.replace(/^\/+/,"");
+    return null;
+  }
+
+  function resolveRepoPath(raw,folder){
+    if(!raw)return null;
+    const rp=ghUrlToRepoPath(raw);
+    if(!rp)return null;
+    if(rp.startsWith("Animes/"))return rp;
+    return `Animes/${folder}/${rp.replace(/^\/+/,"")}`;
+  }
+
+  const ajFiles=tree.tree.filter(f=>
+    f.type==="blob"&&
+    f.path.split("/").pop().toLowerCase()==="anime.json"&&
+    f.path.startsWith("Animes/")
+  );
   const list=[];
+
   for(const jf of ajFiles){
-    const parts=jf.path.split("/");
-    const folder=parts[1];
+    const folder=jf.path.split("/")[1];
     if(!folder)continue;
     const txt=await rawGet(jf.path);
     let aj=null;
     try{aj=JSON.parse(txt);}catch(e){continue;}
     if(!aj)continue;
-    const title=aj.title||folder;
-    const desc=aj.description||"";
-    const genres=aj.genres||[];
-    const status=aj.status||"";
-    const studios=aj.studios||[];
-    const aired=aj.aired||{};
-    const media=aj.media||{};
+
+    const title   = aj.title||folder;
+    const desc    = aj.description||"";
+    const genres  = aj.genres||[];
+    const status  = aj.status||"";
+    const studios = aj.studios||[];
+    const aired   = aj.aired||{};
+    const media   = aj.media||{};
+
     const allFiles=tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob");
+
     let image=null;
     if(media.logo){
-      const logoNorm=media.logo.replace(/^\/+/,"");
-      const logoFull=`Animes/${folder}/${logoNorm}`;
-      const match=tree.tree.find(f=>f.path===logoFull||f.path.endsWith("/"+logoNorm));
-      image=`${RAW}/${match?match.path:logoFull}`;
+      const logoPath=resolveRepoPath(media.logo,folder);
+      if(logoPath){
+        const match=tree.tree.find(f=>f.path===logoPath||decodeURIComponent(f.path)===decodeURIComponent(logoPath));
+        image=match?`${RAW}/${match.path}`:`${RAW}/${logoPath}`;
+      }
     }
     if(!image){
       const imgF=allFiles.find(f=>{const n=f.path.split("/").pop().toLowerCase();return n.startsWith("anime_image")&&isImage(n);});
       if(imgF)image=`${RAW}/${imgF.path}`;
     }
+
     const episodes=[];
     if(media.video_folder){
-      const vfNorm=`Animes/${folder}/${media.video_folder.replace(/^\/+/,"")}`.replace(/\/+$/,"");
-      const vfFiles=tree.tree.filter(f=>f.path.startsWith(vfNorm+"/")&&f.type==="blob");
-      for(const f of vfFiles){const name=f.path.split("/").pop();if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}}
+      const vfPath=resolveRepoPath(media.video_folder,folder);
+      if(vfPath){
+        const vfNorm=vfPath.replace(/\/+$/,"");
+        const vfFiles=tree.tree.filter(f=>f.path.startsWith(vfNorm+"/")&&f.type==="blob");
+        for(const f of vfFiles){
+          const name=f.path.split("/").pop();
+          if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}
+        }
+      }
     }
     if(!episodes.length){
-      for(const f of allFiles){const name=f.path.split("/").pop();if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}}
+      for(const f of allFiles){
+        const name=f.path.split("/").pop();
+        if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}
+      }
     }
     episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
     list.push({name:title,folder,episodes,image,desc,genres,status,studios,aired,aj});
   }
+
   const jsonFolders=new Set(list.map(a=>a.folder));
-  const otherFolders=[...new Set(tree.tree.filter(f=>f.path.startsWith("Animes/")&&f.path.split("/").length>=3).map(f=>f.path.split("/")[1]).filter(f=>f&&!jsonFolders.has(f)))];
+  const otherFolders=[...new Set(
+    tree.tree
+      .filter(f=>f.path.startsWith("Animes/")&&f.path.split("/").length>=3)
+      .map(f=>f.path.split("/")[1])
+      .filter(f=>f&&!jsonFolders.has(f))
+  )];
   for(const folder of otherFolders){
     const files=tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob");
     let image=null,desc="",genres=[],episodes=[];
