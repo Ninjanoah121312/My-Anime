@@ -1,22 +1,20 @@
-{
-  "title": "Classroom of the Elite Season 1",
-  "description": "On the surface, Koudo Ikusei Senior High School is a utopia. The students enjoy an unparalleled amount of freedom, and it is ranked highly in Japan. However, the reality is less than ideal. Four classes, A through D, are ranked in order of merit, and only the top classes receive favorable treatment. Kiyotaka Ayanokouji is a student of Class D, where the school dumps its worst. There he meets the unsociable Suzune Horikita, who believes she was placed in Class D by mistake and desires to climb all the way to Class A, and the seemingly amicable class idol Kikyou Kushida, whose aim is to make as many friends as possible. While class membership is permanent, class rankings are not; students in lower ranked classes can rise in rankings if they score better than those in the top ones. Additionally, in Class D, there are no bars on what methods can be used to get ahead. In this cutthroat school, can they prevail against the odds and reach the top?",
-  "genres": [
-    "Drama", 
-    "School", 
-    "Slice of Life", 
-    "Psychological"
-  ],
-  "status": "Aired",
-  "studios": [
-    "Lerche"
-  ],
-  "aired": {
-    "from": "Jul 12, 2017",
-    "to": "Sep 27, 2017"
-  },
-  "media": {
-    "logo": "https://github.com/Ninjanoah121312/My-Anime/blob/main/Animes/Classroom%20Of%20the%20Elite/e.png",
-    "video_folder": "https://github.com/Ninjanoah121312/My-Anime/tree/main/Animes/Classroom%20Of%20the%20Elite"
+[
+  {
+    "title": "Classroom of the Elite Season 1",
+    "folder": "Classroom_of_the_Elite",
+    "description": "On the surface, Koudo Ikusei Senior High School is a utopia...",
+    "genres": ["Drama", "School", "Slice of Life", "Psychological"],
+    "status": "Aired",
+    "studios": ["Lerche"],
+    "aired": {"from": "Jul 12, 2017", "to": "Sep 27, 2017"},
+    "sub": {
+      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/1_sub.mp4",
+     
+    },
+    "dub": {
+      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/1_dub.mp4",
+      
+    },
+    "image": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/e.png"
   }
-}
+]
