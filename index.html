@@ -328,37 +328,21 @@
     </div>
   </div>
 </div>
-
 <script>
-const OWNER  = "Ninjanoah121312";
-const REPO   = "My-Anime";
-const BRANCH = "main";
-const RAW    = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
-const GHAPI  = `https://api.github.com/repos/${OWNER}/${REPO}`;
-const PER_PAGE = 30;
+const OWNER="Ninjanoah121312";
+const REPO="My-Anime";
+const BRANCH="main";
+const RAW=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
+const GHAPI=`https://api.github.com/repos/${OWNER}/${REPO}`;
+const PER_PAGE=30;
 
-/* encrypted token payload format: v1:<iv_b64>:<cipher_b64> */
-const ENC_GH_TOKEN = "v1:REPLACE_IV_B64:REPLACE_CIPHERTEXT_B64";
-const TOKEN_KEY_PARTS = ["my-anime","frontend","token-key-v1"];
-const TOKEN_SALT_SUFFIX = "my-anime-salt-v1";
+const ENC_GH_TOKEN="v1:/VqPO2/XptErhiUf:/V7gP646Ccx+cec+4iyLXKuhZwtWJjCdGURsLklmGKz6n5LHINtRjCTH6PRjb/Z/cYNrGW67Wa+oRetbc/2aXi2B4of4MhchHTb/cz1mO38oTg2yptbiuv/lkulEhtwqfKpgqmnhM6FJaXJ+XQ==";
+const TOKEN_KEY_PARTS=["my-anime","frontend","token-key-v1"];
+const TOKEN_SALT_SUFFIX="my-anime-salt-v1";
 
-const VIDEO_EXTS=["mp4","webm","mkv","avi","mov","m4v","ogv","ogg","flv","wmv","3gp","ts"];
-const IMAGE_EXTS=["jpg","jpeg","png","gif","webp","bmp","avif"];
-
-let allAnimes=[], viewsData={}, viewsSha=null, userData={}, userSha=null;
-let currentUser=null, currentAnime=null, currentDub="sub", currentEpIdx=0;
-let selectedStar=0, heroList=[], heroIdx=0, heroTimer=null;
-let topSortMode="views", topPeriod="week", psTopSort="views", psTopPeriod="week";
-let lightMode=false, expandMode=false;
-let homePage=1, searchPage=1, genreFilterPage=1;
-let searchQuery="", genreFilter="";
+let allAnimes=[],viewsData={},viewsSha=null,userData={},userSha=null;
+let currentUser=null,currentAnime=null,currentDub="sub",currentEpIdx=0;
 let playerPrefs={autoPlay:false,autoNext:false};
-let ghTree=null;
-
-function enc3(s){let r=btoa(unescape(encodeURIComponent(s)));r=btoa(r);r=r.split('').reverse().join('');return r;}
-function dec3(s){let r=s.split('').reverse().join('');r=atob(r);r=decodeURIComponent(escape(atob(r)));return r;}
-function encLocal(s){return btoa(unescape(encodeURIComponent(s)));}
-function decLocal(s){try{return decodeURIComponent(escape(atob(s)));}catch(e){return s;}}
 
 function b64ToBytes(b64){
   const bin=atob(b64);
@@ -369,57 +353,54 @@ function b64ToBytes(b64){
 function bytesToUtf8(bytes){return new TextDecoder().decode(bytes);}
 
 async function deriveTokenKey(){
-  const pass = new TextEncoder().encode(TOKEN_KEY_PARTS.join(":"));
-  const salt = new TextEncoder().encode(`${location.host}|${TOKEN_SALT_SUFFIX}`);
-  const base = await crypto.subtle.importKey("raw", pass, "PBKDF2", false, ["deriveKey"]);
+  const pass=new TextEncoder().encode(TOKEN_KEY_PARTS.join(":"));
+  const salt=new TextEncoder().encode(`${location.host}|${TOKEN_SALT_SUFFIX}`);
+  const base=await crypto.subtle.importKey("raw",pass,"PBKDF2",false,["deriveKey"]);
   return crypto.subtle.deriveKey(
-    {name:"PBKDF2", salt, iterations:120000, hash:"SHA-256"},
+    {name:"PBKDF2",salt,iterations:120000,hash:"SHA-256"},
     base,
-    {name:"AES-GCM", length:256},
+    {name:"AES-GCM",length:256},
     false,
     ["decrypt"]
   );
 }
+
 async function decryptFrontendToken(payload){
-  if(!payload || !payload.startsWith("v1:")) return "";
+  if(!payload||!payload.startsWith("v1:")) return "";
   const parts=payload.split(":");
   if(parts.length!==3) return "";
   try{
     const iv=b64ToBytes(parts[1]);
     const cipher=b64ToBytes(parts[2]);
     const key=await deriveTokenKey();
-    const plain=await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, cipher);
+    const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv},key,cipher);
     return bytesToUtf8(new Uint8Array(plain));
   }catch(e){
-    console.warn("Token decrypt failed:", e.message);
     return "";
   }
 }
 
 let __tokenCache=null;
-async function ghH(){
-  return {
-    "Accept": "application/vnd.github+json"
-  };
-}
 
+async function ghH(){
+  if(__tokenCache===null){
+    __tokenCache=await decryptFrontendToken(ENC_GH_TOKEN);
+  }
+  const h={"Accept":"application/vnd.github+json"};
+  if(__tokenCache){
+    h["Authorization"]=`Bearer ${__tokenCache}`;
+  }
+  return h;
+}
 
 async function apiGet(path){
   try{
-    const r=await fetch(`${GHAPI}/contents/${path}`,{headers: await ghH()});
+    const r=await fetch(`${GHAPI}/contents/${path}`,{headers:await ghH()});
     if(!r.ok)return null;
     return await r.json();
   }catch(e){return null;}
 }
-async function apiTree(){
-  if(ghTree)return ghTree;
-  try{
-    const r=await fetch(`${GHAPI}/git/trees/${BRANCH}?recursive=1`,{headers: await ghH()});
-    if(!r.ok)return null;
-    ghTree=await r.json();
-    return ghTree;
-  }catch(e){return null;}
-}
+
 async function apiPut(path,content,sha){
   const body={message:`Update ${path}`,content:btoa(unescape(encodeURIComponent(content))),branch:BRANCH};
   if(sha)body.sha=sha;
@@ -432,13 +413,7 @@ async function apiPut(path,content,sha){
     return await r.json();
   }catch(e){return null;}
 }
-async function rawGet(path){
-  try{
-    const r=await fetch(`${RAW}/${path}?cb=${Date.now()}`);
-    if(!r.ok)return null;
-    return await r.text();
-  }catch(e){return null;}
-}
+
 async function loadJSON(path){
   const res=await apiGet(path);
   if(!res||!res.content)return{data:{},sha:null};
@@ -447,38 +422,11 @@ async function loadJSON(path){
     return{data:JSON.parse(d),sha:res.sha};
   }catch(e){return{data:{},sha:res.sha};}
 }
+
 async function saveJSON(path,data,sha){
   const res=await apiPut(path,JSON.stringify(data,null,2),sha);
   return(res&&res.content)?res.content.sha:sha;
 }
-
-function setLoader(pct,msg,detail){
-  document.getElementById("loaderFill").style.width=pct+"%";
-  document.getElementById("loaderMsg").textContent=msg;
-  if(detail!==undefined){
-    document.getElementById("loaderDetail").textContent=detail;
-    document.getElementById("loaderDetail").style.display=detail?"":"none";
-  }
-  if(pct<=0||pct===45){
-    document.getElementById("loaderFill").style.background="#ef4444";
-    document.getElementById("loaderRetry").style.display="inline-block";
-  }
-}
-
-function extOf(n){return n.split(".").pop().toLowerCase();}
-function isVideo(n){return VIDEO_EXTS.includes(extOf(n));}
-function isImage(n){return IMAGE_EXTS.includes(extOf(n));}
-
-function parseEp(filename){
-  const base=filename.replace(/\.[^/.]+$/,"");
-  const lower=base.toLowerCase();
-  const type=lower.includes("_dub")?"dub":"sub";
-  const m=base.match(/^(\d+)/);
-  const num=m?parseInt(m[1]):null;
-  return{num,type,label:num!==null?`EP ${num}`:base,filename};
-}
-
-function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 
 function stripTrailingCommas(str){
   return str.replace(/,\s*([\]}])/g,"$1").replace(/,\s*$/gm,"");
@@ -486,106 +434,41 @@ function stripTrailingCommas(str){
 
 async function fetchAnimeJson(){
   try{
-    const r = await fetch("https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/anime.json");
-
-    if(!r.ok) throw new Error("Failed to fetch anime.json");
-
-    const text = await r.text();
-    const cleaned = stripTrailingCommas(text);
-    const data = JSON.parse(cleaned);
-
-    console.log("anime.json loaded:", data.length);
-    return data;
-
+    const r=await fetch(`${RAW}/anime.json`);
+    if(!r.ok) throw new Error("fetch fail");
+    const text=await r.text();
+    const cleaned=stripTrailingCommas(text);
+    return JSON.parse(cleaned);
   }catch(e){
-    console.error("Fetch error:", e);
     return null;
   }
 }
 
-
-async function loadAnimes(){
-  setLoader(42, "Fetching anime.json from GitHub...");
-
-  const data = await fetchAnimeJson();
-
-  if (!data || !Array.isArray(data)){
-    throw new Error("Failed to load anime.json or invalid format");
-  }
-
-  return convertAnimeFormat(data);
-}
-
-
-  function epNumFromKey(k){
-    const m = String(k).match(/(\d+)/);
-    return m ? parseInt(m[1], 10) : null;
-  }
-
-  
-    if (entry.dub && typeof entry.dub === "object"){
-      for (const [key, url] of Object.entries(entry.dub)){
-        const num = epNumFromKey(key);
-        if (url && num !== null) episodes.push({ num, type: "dub", label: `EP ${num}`, url: String(url).trim() });
-      }
-    }
-
-    episodes.sort((a,b)=>a.num-b.num || a.type.localeCompare(b.type));
-
-    list.push({
-      name: entry.title,
-      folder: entry.folder || entry.title,
-      desc: entry.description || "",
-      genres: Array.isArray(entry.genres) ? entry.genres : [],
-      status: entry.status || "",
-      studios: Array.isArray(entry.studios) ? entry.studios : [],
-      aired: entry.aired || {},
-      image: entry.image || null,
-      episodes
-    });
-  }
-
-  return list;
-}
-
-function getViews(n){return(viewsData[n]||{}).views||0;}
-function getRatings(n){return(viewsData[n]||{}).ratings||[];}
-function getAvg(n){const r=getRatings(n);return r.length?(r.reduce((s,x)=>s+x.score,0)/r.length).toFixed(1):null;}
 function convertAnimeFormat(data){
   function epNumFromKey(k){
-    const m = String(k).match(/(\d+)/);
-    return m ? parseInt(m[1], 10) : null;
+    const m=String(k).match(/(\d+)/);
+    return m?parseInt(m[1],10):null;
   }
 
-  const list = [];
+  const list=[];
 
-  for (const entry of data){
-    const episodes = [];
+  for(const entry of data){
+    const episodes=[];
 
-    if (entry.sub){
-      for (const [key, url] of Object.entries(entry.sub)){
-        const num = epNumFromKey(key);
-        if (url && num !== null){
-          episodes.push({
-            num,
-            type: "sub",
-            label: `EP ${num}`,
-            url: url.trim()
-          });
+    if(entry.sub){
+      for(const [key,url] of Object.entries(entry.sub)){
+        const num=epNumFromKey(key);
+        if(url&&num!==null){
+          episodes.push({num,type:"sub",label:`EP ${num}`,url:url.trim()});
         }
       }
     }
 
-    if (entry.dub){
-      for (const [key, url] of Object.entries(entry.dub)){
-        const num = epNumFromKey(key);
-        if (url && num !== null){
-          episodes.push({
-            num,
-            type: "dub",
-            label: `EP ${num}`,
-            url: url.trim()
-          });
+    if(entry.dub){
+      for(const [key,url] of Object.entries(entry.dub)){
+        const num=epNumFromKey(key);
+        if(url&&num!==null){
+          episodes.push({num,type:"dub",label:`EP ${num}`,url:url.trim()});
         }
       }
     }
@@ -593,14 +476,14 @@ function convertAnimeFormat(data){
     episodes.sort((a,b)=>a.num-b.num);
 
     list.push({
-      name: entry.title,
-      folder: entry.folder || entry.title,
-      desc: entry.description || "",
-      genres: entry.genres || [],
-      status: entry.status || "",
-      studios: entry.studios || [],
-      aired: entry.aired || {},
-      image: entry.image || null,
+      name:entry.title,
+      folder:entry.folder||entry.title,
+      desc:entry.description||"",
+      genres:entry.genres||[],
+      status:entry.status||"",
+      studios:entry.studios||[],
+      aired:entry.aired||{},
+      image:entry.image||null,
       episodes
     });
   }
@@ -610,45 +493,29 @@ function convertAnimeFormat(data){
 
 async function init(){
   try{
-    setLoader(10,"Loading user data...");
-    const saved=localStorage.getItem("animeUser");
-    if(saved){try{const d=JSON.parse(saved);currentUser={username:decLocal(d.u),userId:d.id,email:d.email?decLocal(d.email):"",country:d.country?decLocal(d.country):"",age:d.age||null,favorites:d.favorites||[]};}catch(e){localStorage.removeItem("animeUser");}}
-    const pp=localStorage.getItem("playerPrefs");
-    if(pp)try{playerPrefs=JSON.parse(pp);}catch(e){}
-    setLoader(20,"Loading views...");
     const vd=await loadJSON("Data/Views.json");
-    viewsData=vd.data||{};viewsSha=vd.sha;
-    const udRes=await loadJSON("Data/User_Data.json");
-    userData=udRes.data||{};userSha=udRes.sha;
-    if(!userData.users)userData.users=[];
-    if(currentUser){
-      const rem=localStorage.getItem("animeRemember");
-      if(rem){try{const d=JSON.parse(rem);const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(!u){localStorage.removeItem("animeRemember");}}catch(e){}}
-    } else {
-      const rem=localStorage.getItem("animeRemember");
-      if(rem){try{const d=JSON.parse(rem);const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(u){currentUser={username:dec3(u.username)||u.username,userId:u.userId,email:u.email?dec3(u.email):"",country:u.country?dec3(u.country):"",age:u.age||null,favorites:u.favorites||[]};}}catch(e){localStorage.removeItem("animeRemember");}}
-    }
-    setLoader(40,"Fetching anime library...");
-    const remote = await fetchAnimeJson();
-    allAnimes = remote ? await convertAnimeFormat(remote) : await loadAnimes();
+    viewsData=vd.data||{};
+    viewsSha=vd.sha;
 
-    setLoader(88,"Rendering...");
+    const ud=await loadJSON("Data/User_Data.json");
+    userData=ud.data||{};
+    userSha=ud.sha;
+
+    const remote=await fetchAnimeJson();
+    if(!remote) throw new Error("anime.json failed");
+
+    allAnimes=convertAnimeFormat(remote);
+
     document.getElementById("loaderScreen").style.display="none";
     document.getElementById("siteHeader").style.display="";
     document.getElementById("mainContent").style.display="";
-    updateAuthUI();
-    renderHero();
-    renderPagedGrid("home",1);
-    renderTopList("main");
-    renderGenreTags();
-    populateQFGenres();
-    setLoader(100,"Done");
   }catch(e){
-    setLoader(0,"Init failed: "+e.message,"Check browser console (F12) for details");
-    document.getElementById("loaderRetry").style.display="inline-block";
-    console.error("Init error:",e);
+    console.error(e);
   }
 }
+
+init();
+
 
 function updateAuthUI(){
   const btn=document.getElementById("authBtn");
@@ -673,6 +540,11 @@ function renderHero(){
   setHero(0);renderHeroDots();
   clearInterval(heroTimer);heroTimer=setInterval(()=>shiftHero(1),6000);
 }
+function enc3(s){return btoa(s);}
+function dec3(s){try{return atob(s);}catch(e){return s;}}
+function encLocal(s){return btoa(s);}
+function decLocal(s){try{return atob(s);}catch(e){return s;}}
+
 function setHero(i){
   heroIdx=((i%heroList.length)+heroList.length)%heroList.length;
   const a=heroList[heroIdx];
@@ -1138,7 +1010,6 @@ function closeModal(id){document.getElementById(id).classList.remove("active");i
 function closeAll(){document.querySelectorAll(".modal.active").forEach(m=>m.classList.remove("active"));closeSidenav();document.getElementById("overlay").classList.remove("active");closeProfileDD();}
 function esc(s){return(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 
-init();
 </script>
 
 </body>
