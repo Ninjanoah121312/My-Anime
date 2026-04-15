@@ -398,13 +398,11 @@ async function decryptFrontendToken(payload){
 
 let __tokenCache=null;
 async function ghH(){
-  if(__tokenCache===null){
-    __tokenCache=await decryptFrontendToken(ENC_GH_TOKEN);
-  }
-  const h={"Accept":"application/vnd.github+json"};
-  if(__tokenCache) h["Authorization"]=`Bearer ${__tokenCache}`;
-  return h;
+  return {
+    "Accept": "application/vnd.github+json"
+  };
 }
+
 
 async function apiGet(path){
   try{
