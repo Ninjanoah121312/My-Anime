@@ -8,13 +8,13 @@
     "studios": ["Lerche"],
     "aired": {"from": "Jul 12, 2017", "to": "Sep 27, 2017"},
     "sub": {
-      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/1_sub.mp4"
+      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_dub.mp4"
      
     },
     "dub": {
-      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/1_dub.mp4"
+      "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_dub.mp4"
       
     },
-    "image": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/Animes/Classroom_of_the_Elite/e.png"
+    "image": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/e.png"
   }
 ]
