@@ -516,26 +516,17 @@ async function fetchAnimeJson(){
 }
 
 async function loadAnimes(){
-  setLoader(42, "Loading hardcoded anime...");
+  setLoader(42, "Fetching anime.json from GitHub...");
 
-  const hardcoded = [
-    {
-      title: "Classroom of the Elite Season 1",
-      folder: "Classroom_of_the_Elite",
-      description: "On the surface, Koudo Ikusei Senior High School is a utopia...",
-      genres: ["Drama", "School", "Slice of Life", "Psychological"],
-      status: "Aired",
-      studios: ["Lerche"],
-      aired: { from: "Jul 12, 2017", to: "Sep 27, 2017" },
-      sub: {
-        "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_sub.mp4"
-      },
-      dub: {
-        "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_dub.mp4"
-      },
-      image: "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/e.png"
-    }
-  ];
+  const data = await fetchAnimeJson();
+
+  if (!data || !Array.isArray(data)){
+    throw new Error("Failed to load anime.json or invalid format");
+  }
+
+  return convertAnimeFormat(data);
+}
+
 
   function epNumFromKey(k){
     const m = String(k).match(/(\d+)/);
@@ -579,6 +570,62 @@ async function loadAnimes(){
 function getViews(n){return(viewsData[n]||{}).views||0;}
 function getRatings(n){return(viewsData[n]||{}).ratings||[];}
 function getAvg(n){const r=getRatings(n);return r.length?(r.reduce((s,x)=>s+x.score,0)/r.length).toFixed(1):null;}
+function convertAnimeFormat(data){
+  function epNumFromKey(k){
+    const m = String(k).match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  const list = [];
+
+  for (const entry of data){
+    const episodes = [];
+
+    if (entry.sub){
+      for (const [key, url] of Object.entries(entry.sub)){
+        const num = epNumFromKey(key);
+        if (url && num !== null){
+          episodes.push({
+            num,
+            type: "sub",
+            label: `EP ${num}`,
+            url: url.trim()
+          });
+        }
+      }
+    }
+
+    if (entry.dub){
+      for (const [key, url] of Object.entries(entry.dub)){
+        const num = epNumFromKey(key);
+        if (url && num !== null){
+          episodes.push({
+            num,
+            type: "dub",
+            label: `EP ${num}`,
+            url: url.trim()
+          });
+        }
+      }
+    }
+
+    episodes.sort((a,b)=>a.num-b.num);
+
+    list.push({
+      name: entry.title,
+      folder: entry.folder || entry.title,
+      desc: entry.description || "",
+      genres: entry.genres || [],
+      status: entry.status || "",
+      studios: entry.studios || [],
+      aired: entry.aired || {},
+      image: entry.image || null,
+      episodes
+    });
+  }
+
+  return list;
+}
 
 async function init(){
   try{
@@ -601,7 +648,9 @@ async function init(){
       if(rem){try{const d=JSON.parse(rem);const u=(userData.users||[]).find(x=>x.username===d.u&&x.password===d.p);if(u){currentUser={username:dec3(u.username)||u.username,userId:u.userId,email:u.email?dec3(u.email):"",country:u.country?dec3(u.country):"",age:u.age||null,favorites:u.favorites||[]};}}catch(e){localStorage.removeItem("animeRemember");}}
     }
     setLoader(40,"Fetching anime library...");
-    allAnimes=await loadAnimes();
+    const remote = await fetchAnimeJson();
+    allAnimes = remote ? await convertAnimeFormat(remote) : await loadAnimes();
+
     setLoader(88,"Rendering...");
     document.getElementById("loaderScreen").style.display="none";
     document.getElementById("siteHeader").style.display="";
