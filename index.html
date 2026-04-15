@@ -63,7 +63,6 @@
 
 <div class="overlay" id="overlay" onclick="closeAll()"></div>
 
-<!-- Auth Modal -->
 <div class="modal" id="authModal">
   <div class="modal-box auth-box">
     <button class="modal-close" onclick="closeModal('authModal')">&times;</button>
@@ -120,7 +119,6 @@
   </div>
 </div>
 
-<!-- Edit Profile Modal -->
 <div class="modal" id="editProfileModal">
   <div class="modal-box ep-modal-box">
     <button class="modal-close" onclick="closeModal('editProfileModal')">&times;</button>
@@ -146,7 +144,6 @@
   </div>
 </div>
 
-<!-- Rating Modal -->
 <div class="modal" id="ratingModal">
   <div class="modal-box rating-box">
     <button class="modal-close" onclick="closeModal('ratingModal')">&times;</button>
@@ -158,7 +155,6 @@
   </div>
 </div>
 
-<!-- Player Page (full page, not modal) -->
 <div id="playerPage" style="display:none">
   <div class="player-page-inner">
     <div class="breadcrumb">
@@ -244,7 +240,6 @@
   </div>
 </div>
 
-<!-- Main content -->
 <main id="mainContent" style="display:none">
   <div id="heroSection" class="hero-section">
     <div class="hero-slide" id="heroSlide">
@@ -316,6 +311,24 @@
   </div>
 </main>
 
+<div class="modal" id="randomGenreModal">
+  <div class="modal-box rg-box">
+    <button class="modal-close" onclick="closeModal('randomGenreModal')">&times;</button>
+    <div class="rg-header">
+      <span class="rg-icon">&#127922;</span>
+      <div>
+        <div class="rg-title">Random Anime</div>
+        <div class="rg-sub">Pick genres to filter (optional)</div>
+      </div>
+    </div>
+    <div class="rg-genre-list" id="rgGenreList"></div>
+    <div class="rg-actions">
+      <button class="rg-btn-any" onclick="pickRandom([])">Any Genre</button>
+      <button class="rg-btn-pick" onclick="pickRandom([...document.querySelectorAll('.rg-chk:checked')].map(x=>x.value))">Pick Random</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const OWNER  = "Ninjanoah121312";
 const REPO   = "My-Anime";
@@ -324,10 +337,10 @@ const RAW    = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
 const GHAPI  = `https://api.github.com/repos/${OWNER}/${REPO}`;
 const PER_PAGE = 30;
 
-function _t() {
-  const c=[103,105,116,104,117,98,95,112,97,116,95,49,49,66,78,50,65,85,68,81,48,84,117,120,115,65,74,53,107,115,79,76,113,95,80,119,120,117,120,77,71,107,78,104,85,117,52,119,81,100,81,109,115,120,81,98,107,98,113,100,107,81,87,112,85,113,85,101,116,50,69,50,78,99,86,100,101,109,75,85,69,66,66,71,90,90,111,111,98,114,74,116,49,107];
-  return c.map(n=>String.fromCharCode(n)).join('');
-}
+/* encrypted token payload format: v1:<iv_b64>:<cipher_b64> */
+const ENC_GH_TOKEN = "v1:REPLACE_IV_B64:REPLACE_CIPHERTEXT_B64";
+const TOKEN_KEY_PARTS = ["my-anime","frontend","token-key-v1"];
+const TOKEN_SALT_SUFFIX = "my-anime-salt-v1";
 
 const VIDEO_EXTS=["mp4","webm","mkv","avi","mov","m4v","ogv","ogg","flv","wmv","3gp","ts"];
 const IMAGE_EXTS=["jpg","jpeg","png","gif","webp","bmp","avif"];
@@ -347,32 +360,94 @@ function dec3(s){let r=s.split('').reverse().join('');r=atob(r);r=decodeURICompo
 function encLocal(s){return btoa(unescape(encodeURIComponent(s)));}
 function decLocal(s){try{return decodeURIComponent(escape(atob(s)));}catch(e){return s;}}
 
-function ghH(){return{"Authorization":`token ${_t()}`,"Accept":"application/vnd.github.v3+json"};}
+function b64ToBytes(b64){
+  const bin=atob(b64);
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+  return out;
+}
+function bytesToUtf8(bytes){return new TextDecoder().decode(bytes);}
+
+async function deriveTokenKey(){
+  const pass = new TextEncoder().encode(TOKEN_KEY_PARTS.join(":"));
+  const salt = new TextEncoder().encode(`${location.host}|${TOKEN_SALT_SUFFIX}`);
+  const base = await crypto.subtle.importKey("raw", pass, "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt, iterations:120000, hash:"SHA-256"},
+    base,
+    {name:"AES-GCM", length:256},
+    false,
+    ["decrypt"]
+  );
+}
+async function decryptFrontendToken(payload){
+  if(!payload || !payload.startsWith("v1:")) return "";
+  const parts=payload.split(":");
+  if(parts.length!==3) return "";
+  try{
+    const iv=b64ToBytes(parts[1]);
+    const cipher=b64ToBytes(parts[2]);
+    const key=await deriveTokenKey();
+    const plain=await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, cipher);
+    return bytesToUtf8(new Uint8Array(plain));
+  }catch(e){
+    console.warn("Token decrypt failed:", e.message);
+    return "";
+  }
+}
+
+let __tokenCache=null;
+async function ghH(){
+  if(__tokenCache===null){
+    __tokenCache=await decryptFrontendToken(ENC_GH_TOKEN);
+  }
+  const h={"Accept":"application/vnd.github+json"};
+  if(__tokenCache) h["Authorization"]=`Bearer ${__tokenCache}`;
+  return h;
+}
 
 async function apiGet(path){
-  try{const r=await fetch(`${GHAPI}/contents/${path}`,{headers:ghH()});if(!r.ok)return null;return await r.json();}
-  catch(e){return null;}
+  try{
+    const r=await fetch(`${GHAPI}/contents/${path}`,{headers: await ghH()});
+    if(!r.ok)return null;
+    return await r.json();
+  }catch(e){return null;}
 }
 async function apiTree(){
   if(ghTree)return ghTree;
-  try{const r=await fetch(`${GHAPI}/git/trees/${BRANCH}?recursive=1`,{headers:ghH()});if(!r.ok)return null;ghTree=await r.json();return ghTree;}
-  catch(e){return null;}
+  try{
+    const r=await fetch(`${GHAPI}/git/trees/${BRANCH}?recursive=1`,{headers: await ghH()});
+    if(!r.ok)return null;
+    ghTree=await r.json();
+    return ghTree;
+  }catch(e){return null;}
 }
 async function apiPut(path,content,sha){
   const body={message:`Update ${path}`,content:btoa(unescape(encodeURIComponent(content))),branch:BRANCH};
   if(sha)body.sha=sha;
-  try{const r=await fetch(`${GHAPI}/contents/${path}`,{method:"PUT",headers:{...ghH(),"Content-Type":"application/json"},body:JSON.stringify(body)});return await r.json();}
-  catch(e){return null;}
+  try{
+    const r=await fetch(`${GHAPI}/contents/${path}`,{
+      method:"PUT",
+      headers:{...(await ghH()),"Content-Type":"application/json"},
+      body:JSON.stringify(body)
+    });
+    return await r.json();
+  }catch(e){return null;}
 }
 async function rawGet(path){
-  try{const r=await fetch(`${RAW}/${path}?cb=${Date.now()}`);if(!r.ok)return null;return await r.text();}
-  catch(e){return null;}
+  try{
+    const r=await fetch(`${RAW}/${path}?cb=${Date.now()}`);
+    if(!r.ok)return null;
+    return await r.text();
+  }catch(e){return null;}
 }
 async function loadJSON(path){
   const res=await apiGet(path);
   if(!res||!res.content)return{data:{},sha:null};
-  try{const d=decodeURIComponent(escape(atob(res.content.replace(/\s/g,""))));return{data:JSON.parse(d),sha:res.sha};}
-  catch(e){return{data:{},sha:res.sha};}
+  try{
+    const d=decodeURIComponent(escape(atob(res.content.replace(/\s/g,""))));
+    return{data:JSON.parse(d),sha:res.sha};
+  }catch(e){return{data:{},sha:res.sha};}
 }
 async function saveJSON(path,data,sha){
   const res=await apiPut(path,JSON.stringify(data,null,2),sha);
@@ -407,49 +482,45 @@ function parseEp(filename){
 
 function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 
-async function loadAnimes(){
-  setLoader(42,"Fetching anime.json...");
+function stripTrailingCommas(str){
+  return str.replace(/,\s*([\]}])/g,"$1").replace(/,\s*$/gm,"");
+}
 
-  function stripTrailingCommas(str){
-    return str
-      .replace(/,\s*([\]}])/g,'$1')
-      .replace(/,\s*$/gm,'');
-  }
-
-  async function fetchAnimeJson(){
-    // Method 1: GitHub API (base64, most reliable)
-    try{
-      const r=await fetch(`${GHAPI}/contents/anime.json`,{headers:ghH()});
-      if(r.ok){
-        const j=await r.json();
-        if(j&&j.content){
-          const raw=decodeURIComponent(escape(atob(j.content.replace(/\s/g,""))));
-          const cleaned=stripTrailingCommas(raw);
-          const arr=JSON.parse(cleaned);
-          console.log("anime.json loaded via GitHub API, entries:",arr.length);
-          return arr;
-        }
-      }
-    }catch(e){console.warn("GitHub API fetch failed:",e.message);}
-
-    // Method 2: raw.githubusercontent.com
-    try{
-      const r=await fetch(`${RAW}/anime.json`,{cache:"no-store"});
-      if(r.ok){
-        const raw=await r.text();
+async function fetchAnimeJson(){
+  try{
+    const r=await fetch(`${GHAPI}/contents/anime.json`,{headers: await ghH()});
+    if(r.ok){
+      const j=await r.json();
+      if(j&&j.content){
+        const raw=decodeURIComponent(escape(atob(j.content.replace(/\s/g,""))));
         const cleaned=stripTrailingCommas(raw);
         const arr=JSON.parse(cleaned);
-        console.log("anime.json loaded via raw URL, entries:",arr.length);
+        console.log("anime.json loaded via GitHub API, entries:",arr.length);
         return arr;
       }
-    }catch(e){console.warn("Raw URL fetch failed:",e.message);}
+    }
+  }catch(e){console.warn("GitHub API fetch failed:",e.message);}
 
-    return null;
-  }
+  try{
+    const r=await fetch(`${RAW}/anime.json?cb=${Date.now()}`,{cache:"no-store"});
+    if(r.ok){
+      const raw=await r.text();
+      const cleaned=stripTrailingCommas(raw);
+      const arr=JSON.parse(cleaned);
+      console.log("anime.json loaded via raw URL, entries:",arr.length);
+      return arr;
+    }
+  }catch(e){console.warn("Raw URL fetch failed:",e.message);}
 
+  return null;
+}
+
+async function loadAnimes(){
+  setLoader(42,"Fetching anime.json...");
   const arr=await fetchAnimeJson();
+
   if(!arr){
-    setLoader(45,"Failed to load anime.json — check the file exists at repo root and is valid JSON (no trailing commas)");
+    setLoader(45,"Failed to load anime.json — check repo root and JSON format");
     console.error("All anime.json fetch methods failed");
     return [];
   }
@@ -461,7 +532,7 @@ async function loadAnimes(){
 
   function epNumFromKey(k){
     const m=String(k).match(/(\d+)/);
-    return m?parseInt(m[1]):null;
+    return m?parseInt(m[1],10):null;
   }
 
   const list=[];
@@ -484,14 +555,14 @@ async function loadAnimes(){
     }
     episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
     list.push({
-      name:   entry.title,
-      folder: entry.folder||entry.title,
-      desc:   entry.description||"",
-      genres: Array.isArray(entry.genres)?entry.genres:[],
-      status: entry.status||"",
+      name:entry.title,
+      folder:entry.folder||entry.title,
+      desc:entry.description||"",
+      genres:Array.isArray(entry.genres)?entry.genres:[],
+      status:entry.status||"",
       studios:Array.isArray(entry.studios)?entry.studios:[],
-      aired:  entry.aired||{},
-      image:  entry.image||null,
+      aired:entry.aired||{},
+      image:entry.image||null,
       episodes
     });
   }
@@ -589,9 +660,7 @@ function setHero(i){
   `;
   document.querySelectorAll(".hdot").forEach((d,i)=>d.classList.toggle("active",i===heroIdx));
 }
-function renderHeroDots(){
-  document.getElementById("heroDots").innerHTML=heroList.map((_,i)=>`<span class="hdot${i===0?" active":""}" onclick="setHero(${i})"></span>`).join("");
-}
+function renderHeroDots(){document.getElementById("heroDots").innerHTML=heroList.map((_,i)=>`<span class="hdot${i===0?" active":""}" onclick="setHero(${i})"></span>`).join("");}
 function shiftHero(d){setHero(heroIdx+d);}
 
 function animeCard(a){
@@ -641,7 +710,6 @@ function renderPagedGrid(ctx,page){
   if(ctx==="genreFilter")genreFilterPage=page;
   renderPagination(pagId,page,totalPages,ctx);
 }
-
 function renderPagination(id,cur,total,ctx){
   if(total<=1){document.getElementById(id).innerHTML="";return;}
   let h=`<button class="pg-btn" ${cur===1?"disabled":""} onclick="renderPagedGrid('${ctx}',${cur-1})">&#8249; Previous</button>`;
@@ -649,10 +717,7 @@ function renderPagination(id,cur,total,ctx){
   h+=`<button class="pg-btn" ${cur===total?"disabled":""} onclick="renderPagedGrid('${ctx}',${cur+1})">Next &#8250;</button>`;
   document.getElementById(id).innerHTML=h;
 }
-function goPage(ctx,inpId,total){
-  const v=parseInt(document.getElementById(inpId).value);
-  if(v>=1&&v<=total)renderPagedGrid(ctx,v);
-}
+function goPage(ctx,inpId,total){const v=parseInt(document.getElementById(inpId).value);if(v>=1&&v<=total)renderPagedGrid(ctx,v);}
 
 function renderTopList(scope){
   const sort=scope==="main"?topSortMode:psTopSort;
@@ -783,7 +848,6 @@ function buildPlayerUI(a){
   document.getElementById("autoNextChk").checked=playerPrefs.autoNext;
 }
 function refreshPTabs(){document.querySelectorAll(".ptab").forEach(b=>b.classList.toggle("active",b.textContent.toLowerCase()===currentDub));}
-
 function buildEpGrid(a,mode){
   const eps=a.episodes.filter(e=>e.type===mode);
   document.getElementById("epGrid").innerHTML=eps.map((ep,i)=>`<button class="ep-btn${i===currentEpIdx?" active":""}" onclick="playEp(currentAnime,${i},'${mode}')">${ep.label}</button>`).join("");
@@ -794,7 +858,6 @@ function buildServerRows(a){
   document.getElementById("subServerBtns").innerHTML=hasSub?`<button class="server-btn active">Vidstreaming</button>`:"<span class='empty-msg'>None</span>";
   document.getElementById("dubServerBtns").innerHTML=hasDub?`<button class="server-btn active">Vidstreaming</button>`:"<span class='empty-msg'>None</span>";
 }
-
 function playEp(a,idx,mode){
   if(!a)return;
   const eps=a.episodes.filter(e=>e.type===mode);
@@ -824,7 +887,6 @@ function updatePlayerRating(a){
   const avg=getAvg(a.name);const cnt=getRatings(a.name).length;
   document.getElementById("pmsRating").innerHTML=avg?`&#9733; ${avg}/10 <span class="rcnt">(${cnt} reviews)</span>`:`<span class="no-rating">No ratings yet</span>`;
 }
-
 function renderRelated(a){
   const related=allAnimes.filter(x=>x.name!==a.name&&x.genres.some(g=>a.genres.includes(g))).slice(0,5);
   document.getElementById("relatedList").innerHTML=related.map(r=>`
@@ -837,26 +899,28 @@ function renderRelated(a){
 function updateFavBtn(){
   const isFav=currentUser&&(currentUser.favorites||[]).includes(currentAnime.name);
   const btn=document.getElementById("favBtn");
-  btn.textContent=isFav?"&#9733; Favorited":"&#9734; Favorite";
+  btn.textContent=isFav?"★ Favorited":"☆ Favorite";
   btn.classList.toggle("fav-active",isFav);
 }
-
 async function toggleFavorite(){
   if(!currentUser){openModal("authModal");return;}
   if(!currentUser.favorites)currentUser.favorites=[];
   const n=currentAnime.name;
   const idx=currentUser.favorites.indexOf(n);
-  if(idx>=0)currentUser.favorites.splice(idx,1);
-  else currentUser.favorites.push(n);
+  if(idx>=0)currentUser.favorites.splice(idx,1); else currentUser.favorites.push(n);
   updateFavBtn();
   saveUserLocal();
   const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
   const ui=(userData.users||[]).findIndex(x=>x.userId===currentUser.userId);
   if(ui>=0){userData.users[ui].favorites=currentUser.favorites;userSha=await saveJSON("Data/User_Data.json",userData,userSha);}
 }
-
 function saveUserLocal(){
-  localStorage.setItem("animeUser",JSON.stringify({u:encLocal(currentUser.username),id:currentUser.userId,email:currentUser.email?encLocal(currentUser.email):"",country:currentUser.country?encLocal(currentUser.country):"",age:currentUser.age||null,favorites:currentUser.favorites||[]}));
+  localStorage.setItem("animeUser",JSON.stringify({
+    u:encLocal(currentUser.username),id:currentUser.userId,
+    email:currentUser.email?encLocal(currentUser.email):"",
+    country:currentUser.country?encLocal(currentUser.country):"",
+    age:currentUser.age||null,favorites:currentUser.favorites||[]
+  }));
 }
 
 function closePlayerPage(){
@@ -908,19 +972,14 @@ async function doSignin(){
   const err=document.getElementById("siErr");err.textContent="";
   if(!u||!p){err.textContent="Fill all fields.";return;}
   const ud=await loadJSON("Data/User_Data.json");userData=ud.data;userSha=ud.sha;
-  const found=(userData.users||[]).find(x=>{
-    try{return dec3(x.username)===u||dec3(x.email||"")===u;}catch(e){return x.username===u;}
-  });
+  const found=(userData.users||[]).find(x=>{try{return dec3(x.username)===u||dec3(x.email||"")===u;}catch(e){return x.username===u;}});
   if(!found){err.textContent="User not found.";return;}
   let pw;try{pw=dec3(found.password);}catch(e){pw=found.password;}
   if(pw!==p){err.textContent="Wrong password.";return;}
   currentUser={username:dec3(found.username)||found.username,userId:found.userId,email:found.email?dec3(found.email):"",country:found.country||"",age:found.age||null,favorites:found.favorites||[]};
-  if(rem)localStorage.setItem("animeRemember",JSON.stringify({u:found.username,p:found.password}));
-  else localStorage.removeItem("animeRemember");
-  saveUserLocal();updateAuthUI();closeModal("authModal");
-  renderPagedGrid("home",1);
+  if(rem)localStorage.setItem("animeRemember",JSON.stringify({u:found.username,p:found.password}));else localStorage.removeItem("animeRemember");
+  saveUserLocal();updateAuthUI();closeModal("authModal");renderPagedGrid("home",1);
 }
-
 async function doSignup(){
   const u=document.getElementById("suUser").value.trim();
   const e=document.getElementById("suEmail").value.trim();
@@ -943,7 +1002,6 @@ async function doSignup(){
   currentUser={username:u,userId:newId,email:e,country,age:age?parseInt(age):null,favorites:[]};
   saveUserLocal();updateAuthUI();closeModal("authModal");
 }
-
 async function doEditProfile(){
   if(!currentUser)return;
   const newU=document.getElementById("epUser").value.trim();
@@ -995,7 +1053,10 @@ document.getElementById("searchInput").oninput=function(){
 };
 document.getElementById("searchInput").onkeydown=e=>{if(e.key==="Enter")doSearch();};
 document.getElementById("searchBtn").onclick=doSearch;
-document.addEventListener("click",e=>{if(!e.target.closest(".search-wrap"))document.getElementById("searchDropdown").style.display="none";if(!e.target.closest(".profile-wrap"))closeProfileDD();});
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".search-wrap"))document.getElementById("searchDropdown").style.display="none";
+  if(!e.target.closest(".profile-wrap"))closeProfileDD();
+});
 
 function doSearch(){
   const q=document.getElementById("searchInput").value.trim().toLowerCase();
@@ -1005,7 +1066,6 @@ function doSearch(){
   document.getElementById("searchTitle").textContent=`Results for "${q}"`;
   renderPagedGrid("search",1);
 }
-
 function showPage(p){
   ["home","genres","search","genreFilter","favorites","recommended"].forEach(id=>{
     const el=document.getElementById(id+"Page");if(el)el.style.display=(id===p)?"":"none";
@@ -1019,7 +1079,6 @@ function openRandom(){
   if(!allAnimes.length)return;
   const allGenres=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
   if(!allGenres.length){pickRandom([]);return;}
-  const modal=document.getElementById("randomGenreModal");
   const cont=document.getElementById("rgGenreList");
   cont.innerHTML=allGenres.map(g=>`<label class="rg-label"><input type="checkbox" class="rg-chk" value="${g}"> ${g}</label>`).join("");
   openModal("randomGenreModal");
@@ -1031,8 +1090,12 @@ function pickRandom(genres){
   if(!pool.length)pool=allAnimes;
   openAnime(pool[Math.floor(Math.random()*pool.length)].name);
 }
+
 document.getElementById("randomBtn").onclick=openRandom;
-document.getElementById("menuToggle").onclick=()=>{document.getElementById("sidenav").classList.toggle("open");document.getElementById("overlay").classList.add("active");};
+document.getElementById("menuToggle").onclick=()=>{
+  document.getElementById("sidenav").classList.toggle("open");
+  document.getElementById("overlay").classList.add("active");
+};
 function closeSidenav(){document.getElementById("sidenav").classList.remove("open");if(!document.querySelector(".modal.active"))document.getElementById("overlay").classList.remove("active");}
 function openModal(id){document.getElementById(id).classList.add("active");document.getElementById("overlay").classList.add("active");}
 function closeModal(id){document.getElementById(id).classList.remove("active");if(!document.querySelector(".modal.active"))document.getElementById("overlay").classList.remove("active");}
@@ -1041,25 +1104,6 @@ function esc(s){return(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 
 init();
 </script>
-
-<!-- Random Genre Picker Modal -->
-<div class="modal" id="randomGenreModal">
-  <div class="modal-box rg-box">
-    <button class="modal-close" onclick="closeModal('randomGenreModal')">&times;</button>
-    <div class="rg-header">
-      <span class="rg-icon">&#127922;</span>
-      <div>
-        <div class="rg-title">Random Anime</div>
-        <div class="rg-sub">Pick genres to filter (optional)</div>
-      </div>
-    </div>
-    <div class="rg-genre-list" id="rgGenreList"></div>
-    <div class="rg-actions">
-      <button class="rg-btn-any" onclick="pickRandom([])">Any Genre</button>
-      <button class="rg-btn-pick" onclick="pickRandom([...document.querySelectorAll('.rg-chk:checked')].map(x=>x.value))">Pick Random</button>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
