@@ -516,57 +516,63 @@ async function fetchAnimeJson(){
 }
 
 async function loadAnimes(){
-  setLoader(42,"Fetching anime.json...");
-  const arr=await fetchAnimeJson();
+  setLoader(42, "Loading hardcoded anime...");
 
-  if(!arr){
-    setLoader(45,"Failed to load anime.json — check repo root and JSON format");
-    console.error("All anime.json fetch methods failed");
-    return [];
-  }
-  if(!Array.isArray(arr)){
-    setLoader(45,"anime.json must be a JSON array [ ... ]");
-    console.error("anime.json is not an array:",typeof arr);
-    return [];
-  }
+  const hardcoded = [
+    {
+      title: "Classroom of the Elite Season 1",
+      folder: "Classroom_of_the_Elite",
+      description: "On the surface, Koudo Ikusei Senior High School is a utopia...",
+      genres: ["Drama", "School", "Slice of Life", "Psychological"],
+      status: "Aired",
+      studios: ["Lerche"],
+      aired: { from: "Jul 12, 2017", to: "Sep 27, 2017" },
+      sub: {
+        "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_sub.mp4"
+      },
+      dub: {
+        "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_dub.mp4"
+      },
+      image: "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/e.png"
+    }
+  ];
 
   function epNumFromKey(k){
-    const m=String(k).match(/(\d+)/);
-    return m?parseInt(m[1],10):null;
+    const m = String(k).match(/(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
   }
 
-  const list=[];
-  for(const entry of arr){
-    if(!entry||!entry.title){console.warn("Skipping entry without title:",entry);continue;}
-    const episodes=[];
-    if(entry.sub&&typeof entry.sub==="object"){
-      for(const [key,url] of Object.entries(entry.sub)){
-        if(!url)continue;
-        const num=epNumFromKey(key);
-        if(num!==null)episodes.push({num,type:"sub",label:`EP ${num}`,url:String(url).trim()});
+  const list = [];
+  for (const entry of hardcoded){
+    const episodes = [];
+    if (entry.sub && typeof entry.sub === "object"){
+      for (const [key, url] of Object.entries(entry.sub)){
+        const num = epNumFromKey(key);
+        if (url && num !== null) episodes.push({ num, type: "sub", label: `EP ${num}`, url: String(url).trim() });
       }
     }
-    if(entry.dub&&typeof entry.dub==="object"){
-      for(const [key,url] of Object.entries(entry.dub)){
-        if(!url)continue;
-        const num=epNumFromKey(key);
-        if(num!==null)episodes.push({num,type:"dub",label:`EP ${num}`,url:String(url).trim()});
+    if (entry.dub && typeof entry.dub === "object"){
+      for (const [key, url] of Object.entries(entry.dub)){
+        const num = epNumFromKey(key);
+        if (url && num !== null) episodes.push({ num, type: "dub", label: `EP ${num}`, url: String(url).trim() });
       }
     }
-    episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
+
+    episodes.sort((a,b)=>a.num-b.num || a.type.localeCompare(b.type));
+
     list.push({
-      name:entry.title,
-      folder:entry.folder||entry.title,
-      desc:entry.description||"",
-      genres:Array.isArray(entry.genres)?entry.genres:[],
-      status:entry.status||"",
-      studios:Array.isArray(entry.studios)?entry.studios:[],
-      aired:entry.aired||{},
-      image:entry.image||null,
+      name: entry.title,
+      folder: entry.folder || entry.title,
+      desc: entry.description || "",
+      genres: Array.isArray(entry.genres) ? entry.genres : [],
+      status: entry.status || "",
+      studios: Array.isArray(entry.studios) ? entry.studios : [],
+      aired: entry.aired || {},
+      image: entry.image || null,
       episodes
     });
   }
-  console.log("Parsed animes:",list.map(a=>a.name));
+
   return list;
 }
 
