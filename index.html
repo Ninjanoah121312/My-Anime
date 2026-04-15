@@ -12,6 +12,8 @@
   <div class="loader-logo"><span class="logo-num">M</span><span class="logo-txt">y-Anime</span></div>
   <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
   <p class="loader-msg" id="loaderMsg">Connecting...</p>
+  <p class="loader-detail" id="loaderDetail"></p>
+  <button class="loader-retry" id="loaderRetry" style="display:none" onclick="location.reload()">&#8635; Retry</button>
 </div>
 
 <header id="siteHeader" style="display:none">
@@ -377,9 +379,17 @@ async function saveJSON(path,data,sha){
   return(res&&res.content)?res.content.sha:sha;
 }
 
-function setLoader(pct,msg){
+function setLoader(pct,msg,detail){
   document.getElementById("loaderFill").style.width=pct+"%";
   document.getElementById("loaderMsg").textContent=msg;
+  if(detail!==undefined){
+    document.getElementById("loaderDetail").textContent=detail;
+    document.getElementById("loaderDetail").style.display=detail?"":"none";
+  }
+  if(pct<=0||pct===45){
+    document.getElementById("loaderFill").style.background="#ef4444";
+    document.getElementById("loaderRetry").style.display="inline-block";
+  }
 }
 
 function extOf(n){return n.split(".").pop().toLowerCase();}
@@ -398,116 +408,94 @@ function parseEp(filename){
 function encodePathPart(s){return encodeURIComponent(s).replace(/%20/g,"%20");}
 
 async function loadAnimes(){
-  const tree=await apiTree();
-  if(!tree){setLoader(45,"GitHub API error - check token/network");console.error("apiTree returned null");return[];}
-  if(!tree.tree){setLoader(45,"GitHub tree empty: "+JSON.stringify(tree).slice(0,120));console.error("tree.tree missing",tree);return[];}
-  console.log("Tree loaded, items:",tree.tree.length);
+  setLoader(42,"Fetching anime.json...");
 
-  function ghUrlToRepoPath(url){
-    if(!url)return null;
-    const decoded=decodeURIComponent(url);
-    const markers=[
-      `/blob/${BRANCH}/`,
-      `/tree/${BRANCH}/`,
-      `/raw/${BRANCH}/`
-    ];
-    for(const m of markers){
-      const idx=decoded.indexOf(m);
-      if(idx!==-1)return decoded.slice(idx+m.length);
-    }
-    if(!url.startsWith("http"))return url.replace(/^\/+/,"");
+  function stripTrailingCommas(str){
+    return str
+      .replace(/,\s*([\]}])/g,'$1')
+      .replace(/,\s*$/gm,'');
+  }
+
+  async function fetchAnimeJson(){
+    // Method 1: GitHub API (base64, most reliable)
+    try{
+      const r=await fetch(`${GHAPI}/contents/anime.json`,{headers:ghH()});
+      if(r.ok){
+        const j=await r.json();
+        if(j&&j.content){
+          const raw=decodeURIComponent(escape(atob(j.content.replace(/\s/g,""))));
+          const cleaned=stripTrailingCommas(raw);
+          const arr=JSON.parse(cleaned);
+          console.log("anime.json loaded via GitHub API, entries:",arr.length);
+          return arr;
+        }
+      }
+    }catch(e){console.warn("GitHub API fetch failed:",e.message);}
+
+    // Method 2: raw.githubusercontent.com
+    try{
+      const r=await fetch(`${RAW}/anime.json`,{cache:"no-store"});
+      if(r.ok){
+        const raw=await r.text();
+        const cleaned=stripTrailingCommas(raw);
+        const arr=JSON.parse(cleaned);
+        console.log("anime.json loaded via raw URL, entries:",arr.length);
+        return arr;
+      }
+    }catch(e){console.warn("Raw URL fetch failed:",e.message);}
+
     return null;
   }
 
-  function resolveRepoPath(raw,folder){
-    if(!raw)return null;
-    const rp=ghUrlToRepoPath(raw);
-    if(!rp)return null;
-    if(rp.startsWith("Animes/"))return rp;
-    return `Animes/${folder}/${rp.replace(/^\/+/,"")}`;
+  const arr=await fetchAnimeJson();
+  if(!arr){
+    setLoader(45,"Failed to load anime.json — check the file exists at repo root and is valid JSON (no trailing commas)");
+    console.error("All anime.json fetch methods failed");
+    return [];
+  }
+  if(!Array.isArray(arr)){
+    setLoader(45,"anime.json must be a JSON array [ ... ]");
+    console.error("anime.json is not an array:",typeof arr);
+    return [];
   }
 
-  const ajFiles=tree.tree.filter(f=>
-    f.type==="blob"&&
-    f.path.split("/").pop().toLowerCase()==="anime.json"&&
-    f.path.startsWith("Animes/")
-  );
-  console.log("Anime.json files found:",ajFiles.map(f=>f.path));
+  function epNumFromKey(k){
+    const m=String(k).match(/(\d+)/);
+    return m?parseInt(m[1]):null;
+  }
+
   const list=[];
-
-  for(const jf of ajFiles){
-    const folder=jf.path.split("/")[1];
-    if(!folder)continue;
-    const txt=await rawGet(jf.path);
-    let aj=null;
-    try{aj=JSON.parse(txt);}catch(e){continue;}
-    if(!aj)continue;
-
-    const title   = aj.title||folder;
-    const desc    = aj.description||"";
-    const genres  = aj.genres||[];
-    const status  = aj.status||"";
-    const studios = aj.studios||[];
-    const aired   = aj.aired||{};
-    const media   = aj.media||{};
-
-    const allFiles=tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob");
-
-    let image=null;
-    if(media.logo){
-      const logoPath=resolveRepoPath(media.logo,folder);
-      if(logoPath){
-        const match=tree.tree.find(f=>f.path===logoPath||decodeURIComponent(f.path)===decodeURIComponent(logoPath));
-        image=match?`${RAW}/${match.path}`:`${RAW}/${logoPath}`;
-      }
-    }
-    if(!image){
-      const imgF=allFiles.find(f=>{const n=f.path.split("/").pop().toLowerCase();return n.startsWith("anime_image")&&isImage(n);});
-      if(imgF)image=`${RAW}/${imgF.path}`;
-    }
-
+  for(const entry of arr){
+    if(!entry||!entry.title){console.warn("Skipping entry without title:",entry);continue;}
     const episodes=[];
-    if(media.video_folder){
-      const vfPath=resolveRepoPath(media.video_folder,folder);
-      if(vfPath){
-        const vfNorm=vfPath.replace(/\/+$/,"");
-        const vfFiles=tree.tree.filter(f=>f.path.startsWith(vfNorm+"/")&&f.type==="blob");
-        for(const f of vfFiles){
-          const name=f.path.split("/").pop();
-          if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}
-        }
+    if(entry.sub&&typeof entry.sub==="object"){
+      for(const [key,url] of Object.entries(entry.sub)){
+        if(!url)continue;
+        const num=epNumFromKey(key);
+        if(num!==null)episodes.push({num,type:"sub",label:`EP ${num}`,url:String(url).trim()});
       }
     }
-    if(!episodes.length){
-      for(const f of allFiles){
-        const name=f.path.split("/").pop();
-        if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}
+    if(entry.dub&&typeof entry.dub==="object"){
+      for(const [key,url] of Object.entries(entry.dub)){
+        if(!url)continue;
+        const num=epNumFromKey(key);
+        if(num!==null)episodes.push({num,type:"dub",label:`EP ${num}`,url:String(url).trim()});
       }
     }
     episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
-    list.push({name:title,folder,episodes,image,desc,genres,status,studios,aired,aj});
+    list.push({
+      name:   entry.title,
+      folder: entry.folder||entry.title,
+      desc:   entry.description||"",
+      genres: Array.isArray(entry.genres)?entry.genres:[],
+      status: entry.status||"",
+      studios:Array.isArray(entry.studios)?entry.studios:[],
+      aired:  entry.aired||{},
+      image:  entry.image||null,
+      episodes
+    });
   }
-
-  const jsonFolders=new Set(list.map(a=>a.folder));
-  const otherFolders=[...new Set(
-    tree.tree
-      .filter(f=>f.path.startsWith("Animes/")&&f.path.split("/").length>=3)
-      .map(f=>f.path.split("/")[1])
-      .filter(f=>f&&!jsonFolders.has(f))
-  )];
-  for(const folder of otherFolders){
-    const files=tree.tree.filter(f=>f.path.startsWith(`Animes/${folder}/`)&&f.type==="blob");
-    let image=null,desc="",genres=[],episodes=[];
-    for(const f of files){
-      const name=f.path.split("/").pop();const lower=name.toLowerCase();
-      if(lower.startsWith("anime_image")&&isImage(name))image=`${RAW}/${f.path}`;
-      if(lower==="anime_description.txt")desc=(await rawGet(f.path)||"").trim();
-      if(lower==="anime_genre.txt"){const gt=await rawGet(f.path)||"";genres=gt.split(/[\n,]/).map(g=>g.trim()).filter(Boolean);}
-      if(isVideo(name)){const ep=parseEp(name);if(ep.num!==null){ep.url=`${RAW}/${f.path}`;episodes.push(ep);}}
-    }
-    episodes.sort((a,b)=>a.num-b.num||a.type.localeCompare(b.type));
-    list.push({name:folder,folder,episodes,image,desc,genres,status:"",studios:[],aired:{}});
-  }
+  console.log("Parsed animes:",list.map(a=>a.name));
   return list;
 }
 
@@ -549,8 +537,8 @@ async function init(){
     populateQFGenres();
     setLoader(100,"Done");
   }catch(e){
-    document.getElementById("loaderMsg").textContent="Error: "+e.message+" — check console";
-    document.getElementById("loaderFill").style.background="#ef4444";
+    setLoader(0,"Init failed: "+e.message,"Check browser console (F12) for details");
+    document.getElementById("loaderRetry").style.display="inline-block";
     console.error("Init error:",e);
   }
 }
@@ -633,7 +621,12 @@ function animeCard(a){
 
 function renderPagedGrid(ctx,page){
   let list=[...allAnimes];
-  if(ctx==="search")list=allAnimes.filter(a=>a.name.toLowerCase().includes(searchQuery)||a.genres.some(g=>g.toLowerCase().includes(searchQuery)));
+  if(ctx==="search")list=allAnimes.filter(a=>
+    a.name.toLowerCase().includes(searchQuery)||
+    a.genres.some(g=>g.toLowerCase().includes(searchQuery))||
+    (a.desc||"").toLowerCase().includes(searchQuery)||
+    (a.studios||[]).some(s=>s.toLowerCase().includes(searchQuery))
+  );
   if(ctx==="genreFilter")list=allAnimes.filter(a=>a.genres.includes(genreFilter));
   list.sort((a,b)=>getViews(b.name)-getViews(a.name));
   const total=list.length;
@@ -995,7 +988,7 @@ document.getElementById("searchInput").oninput=function(){
   const q=this.value.trim().toLowerCase();
   const dd=document.getElementById("searchDropdown");
   if(!q){dd.style.display="none";return;}
-  const hits=allAnimes.filter(a=>a.name.toLowerCase().includes(q)).slice(0,6);
+  const hits=allAnimes.filter(a=>a.name.toLowerCase().includes(q)||a.genres.some(g=>g.toLowerCase().includes(q))||(a.studios||[]).some(s=>s.toLowerCase().includes(q))).slice(0,6);
   if(!hits.length){dd.style.display="none";return;}
   dd.innerHTML=hits.map(a=>`<div class="dd-item" onclick="openAnime('${esc(a.name)}')">${a.name}</div>`).join("");
   dd.style.display="block";
@@ -1022,7 +1015,22 @@ function showPage(p){
   if(p==="recommended")renderRecommended();
 }
 
-function openRandom(){if(!allAnimes.length)return;openAnime(allAnimes[Math.floor(Math.random()*allAnimes.length)].name);}
+function openRandom(){
+  if(!allAnimes.length)return;
+  const allGenres=[...new Set(allAnimes.flatMap(a=>a.genres))].sort();
+  if(!allGenres.length){pickRandom([]);return;}
+  const modal=document.getElementById("randomGenreModal");
+  const cont=document.getElementById("rgGenreList");
+  cont.innerHTML=allGenres.map(g=>`<label class="rg-label"><input type="checkbox" class="rg-chk" value="${g}"> ${g}</label>`).join("");
+  openModal("randomGenreModal");
+}
+function pickRandom(genres){
+  closeModal("randomGenreModal");
+  let pool=allAnimes;
+  if(genres.length)pool=allAnimes.filter(a=>genres.some(g=>a.genres.includes(g)));
+  if(!pool.length)pool=allAnimes;
+  openAnime(pool[Math.floor(Math.random()*pool.length)].name);
+}
 document.getElementById("randomBtn").onclick=openRandom;
 document.getElementById("menuToggle").onclick=()=>{document.getElementById("sidenav").classList.toggle("open");document.getElementById("overlay").classList.add("active");};
 function closeSidenav(){document.getElementById("sidenav").classList.remove("open");if(!document.querySelector(".modal.active"))document.getElementById("overlay").classList.remove("active");}
@@ -1033,5 +1041,25 @@ function esc(s){return(s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 
 init();
 </script>
+
+<!-- Random Genre Picker Modal -->
+<div class="modal" id="randomGenreModal">
+  <div class="modal-box rg-box">
+    <button class="modal-close" onclick="closeModal('randomGenreModal')">&times;</button>
+    <div class="rg-header">
+      <span class="rg-icon">&#127922;</span>
+      <div>
+        <div class="rg-title">Random Anime</div>
+        <div class="rg-sub">Pick genres to filter (optional)</div>
+      </div>
+    </div>
+    <div class="rg-genre-list" id="rgGenreList"></div>
+    <div class="rg-actions">
+      <button class="rg-btn-any" onclick="pickRandom([])">Any Genre</button>
+      <button class="rg-btn-pick" onclick="pickRandom([...document.querySelectorAll('.rg-chk:checked')].map(x=>x.value))">Pick Random</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
