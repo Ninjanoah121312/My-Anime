@@ -7,6 +7,7 @@
     "status": "Aired",
     "studios": ["Lerche"],
     "aired": {"from": "Jul 12, 2017", "to": "Sep 27, 2017"},
+    "relatedAnime": ["Classroom of the Elite Season 1"]
     "sub": {
       "EP: 1": "https://raw.githubusercontent.com/Ninjanoah121312/My-Anime/main/1_dub.mp4"
      
