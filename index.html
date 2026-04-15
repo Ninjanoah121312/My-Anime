@@ -434,15 +434,22 @@ function stripTrailingCommas(str){
 
 async function fetchAnimeJson(){
   try{
-    const r=await fetch(`${RAW}/anime.json`);
-    if(!r.ok) throw new Error("fetch fail");
-    const text=await r.text();
-    const cleaned=stripTrailingCommas(text);
-    return JSON.parse(cleaned);
-  }catch(e){
+    const r = await fetch(`${RAW}/anime.json`, {
+      cache: "no-store"
+    });
+
+    if(!r.ok) throw new Error("HTTP " + r.status);
+
+    const data = await r.json(); // ✅ LET BROWSER PARSE IT
+
+    return data;
+
+  } catch(e){
+    console.error("anime.json failed:", e);
     return null;
   }
 }
+
 
 function convertAnimeFormat(data){
   function epNumFromKey(k){
