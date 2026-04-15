@@ -336,6 +336,12 @@ const RAW=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
 const GHAPI=`https://api.github.com/repos/${OWNER}/${REPO}`;
 const PER_PAGE=30;
 
+let searchQuery = "";
+let genreFilter = "";
+let homePage = 1;
+let searchPage = 1;
+let genreFilterPage = 1;
+
 const ENC_GH_TOKEN="v1:/VqPO2/XptErhiUf:/V7gP646Ccx+cec+4iyLXKuhZwtWJjCdGURsLklmGKz6n5LHINtRjCTH6PRjb/Z/cYNrGW67Wa+oRetbc/2aXi2B4of4MhchHTb/cz1mO38oTg2yptbiuv/lkulEhtwqfKpgqmnhM6FJaXJ+XQ==";
 const TOKEN_KEY_PARTS=["my-anime","frontend","token-key-v1"];
 const TOKEN_SALT_SUFFIX="my-anime-salt-v1";
@@ -516,12 +522,21 @@ async function init(){
     document.getElementById("loaderScreen").style.display="none";
     document.getElementById("siteHeader").style.display="";
     document.getElementById("mainContent").style.display="";
+    console.log("Anime loaded:", allAnimes);
+
   }catch(e){
     console.error(e);
+    console.log("Anime loaded:", allAnimes);
+
   }
 }
 
 init();
+renderPagedGrid("home", 1);
+renderHero();
+populateQFGenres();
+renderGenreTags();
+
 
 
 function updateAuthUI(){
