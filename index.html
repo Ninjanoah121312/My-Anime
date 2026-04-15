@@ -524,15 +524,7 @@ async function loadAnimes(){
     return m ? parseInt(m[1], 10) : null;
   }
 
-  const list = [];
-  for (const entry of hardcoded){
-    const episodes = [];
-    if (entry.sub && typeof entry.sub === "object"){
-      for (const [key, url] of Object.entries(entry.sub)){
-        const num = epNumFromKey(key);
-        if (url && num !== null) episodes.push({ num, type: "sub", label: `EP ${num}`, url: String(url).trim() });
-      }
-    }
+  
     if (entry.dub && typeof entry.dub === "object"){
       for (const [key, url] of Object.entries(entry.dub)){
         const num = epNumFromKey(key);
